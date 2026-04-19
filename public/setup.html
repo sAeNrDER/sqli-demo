@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab Setup — FIT2173</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">&#x1F512; FIT2173</a>
+  <a href="setup.html" class="active">Lab Setup</a>
+  <a href="html-basics.html">HTML Basics</a>
+  <a href="login.html">SQLi Demo</a>
+  <a href="sqli.html">How SQLi Works</a>
+  <a href="burpsuite.html">Burp Suite</a>
+</nav>
+
+<div class="page">
+  <div class="badge" style="display:inline-block;background:rgba(88,166,255,0.15);color:var(--blue);border:1px solid rgba(88,166,255,0.3);padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-bottom:1rem">Before You Start</div>
+  <h1>Lab Setup</h1>
+  <p>Complete these two steps before anything else. The whole lab depends on having a working PortSwigger account and a correctly configured Burp Suite. It takes about 5 minutes.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0">
+    <a href="#portswigger" style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:1rem;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+      <span style="font-size:2rem">🌐</span>
+      <div>
+        <div style="font-weight:700;color:var(--text);font-size:0.95rem">Step 1 — PortSwigger Account</div>
+        <div style="font-size:0.82rem;color:var(--text2);margin-top:2px">Register &amp; access the free labs</div>
+      </div>
+    </a>
+    <a href="#burpsuite" style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:1rem;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border)'">
+      <span style="font-size:2rem">🛡️</span>
+      <div>
+        <div style="font-weight:700;color:var(--text);font-size:0.95rem">Step 2 — Burp Suite Proxy</div>
+        <div style="font-size:0.82rem;color:var(--text2);margin-top:2px">Intercept &amp; modify HTTP requests</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       STEP 1 — PORTSWIGGER ACCOUNT
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="portswigger" style="border-top:1px solid var(--border);margin-top:2rem;padding-top:2.5rem">
+    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+      <span style="background:rgba(88,166,255,0.15);color:var(--blue);border:1px solid rgba(88,166,255,0.3);padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:600">STEP 1</span>
+    </div>
+    <h2 style="margin-top:0.5rem">Create a PortSwigger Account</h2>
+    <p>PortSwigger Academy hosts the official SQL injection labs used in this unit. You need a free account to access them. The whole process takes under 2 minutes.</p>
+
+    <!-- Registration steps -->
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Go to the registration page</h3>
+        <p>Open your browser and navigate to:</p>
+        <div class="http-block" style="margin-top:0.5rem">
+          <a href="https://portswigger.net/users/register" target="_blank" style="color:var(--blue);text-decoration:none">https://portswigger.net/users/register</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Fill in your details</h3>
+        <p>Enter your email address and choose a password. Use your university email if possible — it keeps your account identifiable for future labs.</p>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:0.5rem;font-size:0.85rem;display:grid;grid-template-columns:120px 1fr;gap:0.4rem 1rem;align-items:center">
+          <span style="color:var(--text2)">Email</span>
+          <span style="color:var(--text);font-family:monospace">yourname@student.monash.edu</span>
+          <span style="color:var(--text2)">Password</span>
+          <span style="color:var(--text);font-family:monospace">something you'll remember ↓ see warning below</span>
+          <span style="color:var(--text2)">Username</span>
+          <span style="color:var(--text);font-family:monospace">anything you like</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Verify your email</h3>
+        <p>PortSwigger will send a verification email to the address you used. Open your inbox and click the confirmation link. Check your spam folder if it doesn't arrive within 1–2 minutes.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Log in and go to the labs</h3>
+        <p>Once verified, log in and navigate to Web Security Academy:</p>
+        <div class="http-block" style="margin-top:0.5rem">
+          <a href="https://portswigger.net/web-security/sql-injection" target="_blank" style="color:var(--blue);text-decoration:none">https://portswigger.net/web-security/sql-injection</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⚠️ Password warning — the critical bit -->
+    <div style="background:linear-gradient(135deg,rgba(227,179,65,0.12),rgba(227,179,65,0.05));border:2px solid var(--yellow);border-radius:12px;padding:1.5rem;margin:1.5rem 0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
+        <span style="font-size:1.4rem">⚠️</span>
+        <span style="font-weight:700;color:var(--yellow);font-size:1rem">Important — Save Your Password Right Now</span>
+      </div>
+      <p style="margin:0 0 0.75rem;color:var(--text);font-size:0.92rem">PortSwigger's login system uses a <strong>one-time email link</strong> (magic link) after you register. Every time you log in from a new device or session, PortSwigger emails you a login link instead of asking for a password.</p>
+      <p style="margin:0 0 0.75rem;color:var(--text);font-size:0.92rem">This means:</p>
+      <ul style="margin:0 0 0.75rem 1.5rem;color:var(--text2);font-size:0.88rem;line-height:2.2">
+        <li>Each login link <strong style="color:var(--yellow)">expires after one use</strong> — you can't click it twice</li>
+        <li>If you close the tab before the lab loads, you'll need a new link</li>
+        <li>In the lab room, <strong style="color:var(--yellow)">open the email link immediately</strong> — don't leave it sitting in your inbox</li>
+        <li>Keep your inbox open in another tab during the lab session</li>
+      </ul>
+      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;color:var(--text2)">
+        <strong style="color:var(--yellow)">Tip:</strong> Once you're logged in and a lab is open, don't close that tab. PortSwigger keeps your session active as long as the lab window stays open.
+      </div>
+    </div>
+
+    <!-- Lab credentials warning -->
+    <div style="background:linear-gradient(135deg,rgba(248,81,73,0.1),rgba(248,81,73,0.04));border:2px solid var(--red);border-radius:12px;padding:1.5rem;margin:1.5rem 0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
+        <span style="font-size:1.4rem">🔑</span>
+        <span style="font-weight:700;color:var(--red);font-size:1rem">Lab Credentials — Write Them Down Immediately</span>
+      </div>
+      <p style="margin:0 0 0.75rem;color:var(--text);font-size:0.92rem">When you launch a PortSwigger lab, the lab page shows you a set of <strong>generated credentials</strong> for that specific lab session — for example:</p>
+
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;font-family:monospace;font-size:0.88rem;margin:0.75rem 0;display:grid;grid-template-columns:auto 1fr;gap:0.3rem 1.5rem;align-items:center">
+        <span style="color:var(--text2)">Username:</span> <span style="color:var(--green)">wiener</span>
+        <span style="color:var(--text2)">Password:</span> <span style="color:var(--red)">pq7hz3m2kf9t</span>
+        <span style="color:var(--text2)">Note:</span> <span style="color:var(--yellow);font-size:0.8rem">These are randomly generated for your session — yours will be different</span>
+      </div>
+
+      <ul style="margin:0 0 0.75rem 1.5rem;color:var(--text2);font-size:0.88rem;line-height:2.2">
+        <li>These credentials are <strong style="color:var(--red)">generated once per lab session</strong> — they're not shown again</li>
+        <li>If you navigate away and come back, the credentials panel may be gone</li>
+        <li><strong style="color:var(--red)">Write them in your notes immediately</strong> when the lab opens</li>
+        <li>They expire when the lab session ends — a new session gives new credentials</li>
+      </ul>
+      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;color:var(--text2)">
+        <strong style="color:var(--orange)">Where to find them:</strong> The credentials box is shown in the lab description panel at the top of the lab page, usually labelled <em>"Your credentials"</em> or <em>"Log in with"</em>. Look for it before you start clicking anything.
+      </div>
+    </div>
+
+    <!-- How to start a lab -->
+    <h3>Starting a Lab — Step by Step</h3>
+    <div style="counter-reset:lab-step">
+
+      <div style="display:flex;gap:1rem;margin:0.75rem 0;align-items:flex-start">
+        <div style="flex-shrink:0;width:26px;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text2);font-weight:700">1</div>
+        <div style="font-size:0.88rem;color:var(--text2);padding-top:3px">Navigate to the lab page (link will be in your lab sheet)</div>
+      </div>
+      <div style="display:flex;gap:1rem;margin:0.75rem 0;align-items:flex-start">
+        <div style="flex-shrink:0;width:26px;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text2);font-weight:700">2</div>
+        <div style="font-size:0.88rem;color:var(--text2);padding-top:3px">Click <strong style="color:var(--text)">"Access the lab"</strong> — this provisions a fresh vulnerable web app just for you</div>
+      </div>
+      <div style="display:flex;gap:1rem;margin:0.75rem 0;align-items:flex-start">
+        <div style="flex-shrink:0;width:26px;height:26px;background:var(--yellow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:#000;font-weight:700">3</div>
+        <div style="font-size:0.88rem;padding-top:3px"><strong style="color:var(--yellow)">Immediately note the credentials shown in the description panel</strong> — username and password for that session</div>
+      </div>
+      <div style="display:flex;gap:1rem;margin:0.75rem 0;align-items:flex-start">
+        <div style="flex-shrink:0;width:26px;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text2);font-weight:700">4</div>
+        <div style="font-size:0.88rem;color:var(--text2);padding-top:3px">The lab opens in a new tab — this is your live target app. Keep this tab open for the whole session</div>
+      </div>
+      <div style="display:flex;gap:1rem;margin:0.75rem 0;align-items:flex-start">
+        <div style="flex-shrink:0;width:26px;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text2);font-weight:700">5</div>
+        <div style="font-size:0.88rem;color:var(--text2);padding-top:3px">Route traffic through Burp Suite so you can intercept and modify requests (see Step 2 below)</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════
+       STEP 2 — BURP SUITE PROXY SETUP
+       ══════════════════════════════════════════════════════════════ -->
+  <div id="burpsuite" style="border-top:1px solid var(--border);margin-top:3rem;padding-top:2.5rem">
+    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+      <span style="background:rgba(255,166,87,0.15);color:var(--orange);border:1px solid rgba(255,166,87,0.3);padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:600">STEP 2</span>
+    </div>
+    <h2 style="margin-top:0.5rem">Configure Burp Suite Proxy</h2>
+    <p>You have two options for routing traffic through Burp. <strong>Option A is the easiest</strong> — use Burp's built-in browser which requires zero configuration. Option B is for your regular browser.</p>
+
+    <!-- Option A — Built-in browser (RECOMMENDED) -->
+    <div style="border:2px solid rgba(63,185,80,0.4);border-radius:12px;overflow:hidden;margin:1.5rem 0">
+      <div style="background:rgba(63,185,80,0.1);padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px">
+        <span style="background:var(--green);color:#000;border-radius:4px;padding:1px 10px;font-size:0.78rem;font-weight:700">RECOMMENDED</span>
+        <span style="font-weight:700;color:var(--green);font-size:0.95rem">Option A — Use Burp's Built-in Browser</span>
+      </div>
+      <div style="padding:1.25rem">
+        <p>Burp Suite comes with its own Chromium-based browser that is <strong>pre-configured to route all traffic through Burp's proxy</strong>. No manual proxy settings, no certificate issues.</p>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Open Burp Suite</h3>
+            <p>Launch Burp Suite Community Edition. On the startup screen, click <strong>"Temporary project"</strong> → <strong>"Use Burp defaults"</strong> → <strong>"Start Burp"</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Open the built-in browser</h3>
+            <p>In Burp Suite, go to the <strong>Proxy</strong> tab → click <strong>"Open browser"</strong>. A Chromium window opens — this is your attack browser.</p>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;margin-top:0.5rem;font-size:0.83rem;display:flex;align-items:center;gap:10px">
+              <span style="font-size:1.2rem">💡</span>
+              <span style="color:var(--text2)">The built-in browser's traffic automatically appears in <strong style="color:var(--text)">Proxy → HTTP history</strong> — no setup needed.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Navigate to the lab in the built-in browser</h3>
+            <p>In the Burp browser, go to your PortSwigger lab URL. All requests will be logged in Burp's HTTP history automatically.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Turn on Intercept when you're ready to modify a request</h3>
+            <p>Go to <strong>Proxy → Intercept</strong>. Click <strong>"Intercept is off"</strong> to toggle it on (button turns orange). Now any request made in the browser will pause here for you to modify before forwarding.</p>
+            <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap">
+              <div style="background:rgba(248,81,73,0.1);border:1px solid var(--red);border-radius:8px;padding:0.6rem 1rem;font-size:0.82rem">
+                <span style="color:var(--text2)">Intercepting:</span> <strong style="color:var(--red)">Intercept is on</strong>
+              </div>
+              <div style="background:rgba(63,185,80,0.08);border:1px solid var(--green);border-radius:8px;padding:0.6rem 1rem;font-size:0.82rem">
+                <span style="color:var(--text2)">Browsing normally:</span> <strong style="color:var(--green)">Intercept is off</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option B — Manual proxy in Firefox -->
+    <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:1.5rem 0">
+      <div style="background:var(--bg2);padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px">
+        <span style="background:var(--bg3);color:var(--text2);border-radius:4px;padding:1px 10px;font-size:0.78rem;font-weight:700;border:1px solid var(--border)">ALTERNATIVE</span>
+        <span style="font-weight:700;color:var(--text);font-size:0.95rem">Option B — Configure Your Browser Manually (Firefox)</span>
+      </div>
+      <div style="padding:1.25rem">
+        <p>If you prefer to use your regular browser, you need to point it at Burp's proxy and install Burp's CA certificate. Firefox is the most reliable choice for this.</p>
+
+        <h3 style="color:var(--orange)">Part 1 — Point Firefox at Burp</h3>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Verify Burp's proxy listener</h3>
+            <p>In Burp Suite: <strong>Proxy → Proxy settings → Proxy listeners</strong>. Confirm there's a listener on <code>127.0.0.1:8080</code> with Status = <strong>Running</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Open Firefox proxy settings</h3>
+            <p>In Firefox: <strong>☰ Menu → Settings → search "proxy" → Settings…</strong> (under Network Settings at the bottom of the General page)</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Set Manual proxy configuration</h3>
+            <p>Select <strong>"Manual proxy configuration"</strong> and fill in:</p>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:0.5rem;font-size:0.85rem;display:grid;grid-template-columns:140px 1fr;gap:0.4rem 1rem;align-items:center;font-family:monospace">
+              <span style="color:var(--text2)">HTTP Proxy:</span> <span style="color:var(--blue)">127.0.0.1</span>
+              <span style="color:var(--text2)">Port:</span> <span style="color:var(--blue)">8080</span>
+              <span style="color:var(--text2)">Also use for HTTPS:</span> <span style="color:var(--green)">✓ checked</span>
+            </div>
+            <p style="margin-top:0.75rem">Click <strong>OK</strong> to save.</p>
+          </div>
+        </div>
+
+        <h3 style="color:var(--orange);margin-top:1.5rem">Part 2 — Install Burp's CA Certificate (for HTTPS)</h3>
+        <p>Without the certificate, Firefox will show a security error for every HTTPS site. This installs Burp's certificate so it can decrypt and re-encrypt HTTPS traffic transparently.</p>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Download the certificate</h3>
+            <p>With the proxy configured and Burp running, navigate to this address <strong>in Firefox</strong>:</p>
+            <div class="http-block" style="margin-top:0.5rem">
+              <a href="http://burpsuite" style="color:var(--blue);text-decoration:none;pointer-events:none">http://burpsuite</a>
+            </div>
+            <p>Click <strong>"CA Certificate"</strong> to download <code>cacert.der</code>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Import the certificate into Firefox</h3>
+            <p>In Firefox: <strong>☰ Menu → Settings → search "certificates" → View Certificates → Authorities tab → Import…</strong></p>
+            <p>Select the <code>cacert.der</code> file you just downloaded. Tick <strong>"Trust this CA to identify websites"</strong> → OK.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Verify it works</h3>
+            <p>Navigate to <code>https://portswigger.net</code> in Firefox. If the page loads without a security warning and you see the request appear in Burp's HTTP history — you're all set.</p>
+          </div>
+        </div>
+
+        <div class="alert alert-warning" style="margin-top:1rem">
+          <strong>Remember to reset the proxy when you're done.</strong> While the proxy is active, Firefox routes ALL traffic through Burp — including your normal browsing. When you finish the lab, go back to Firefox proxy settings and select <strong>"No proxy"</strong> or <strong>"Use system proxy settings"</strong>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick check -->
+    <h3>Quick Sanity Check</h3>
+    <p>Before starting the lab, confirm everything is working:</p>
+    <div style="display:grid;gap:0.6rem;margin-top:0.75rem">
+      <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.88rem;color:var(--text2)">
+        <input type="checkbox" style="margin-top:2px;flex-shrink:0;width:auto"> Burp Suite is open and running
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.88rem;color:var(--text2)">
+        <input type="checkbox" style="margin-top:2px;flex-shrink:0;width:auto"> Proxy listener is active on 127.0.0.1:8080
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.88rem;color:var(--text2)">
+        <input type="checkbox" style="margin-top:2px;flex-shrink:0;width:auto"> Traffic is visible in Proxy → HTTP History when I browse
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.88rem;color:var(--text2)">
+        <input type="checkbox" style="margin-top:2px;flex-shrink:0;width:auto"> I'm logged in to PortSwigger Academy
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.88rem;color:var(--text2)">
+        <input type="checkbox" style="margin-top:2px;flex-shrink:0;width:auto"> I have written down my lab credentials (username + password) from the lab page
+      </label>
+    </div>
+
+    <div class="alert alert-success" style="margin-top:1.5rem">
+      <strong>All checked?</strong> You're ready. Head to the lab and start intercepting.
+    </div>
+
+    <div style="margin-top:1.5rem">
+      <a href="html-basics.html" class="btn btn-primary" style="margin-right:0.75rem">Next: HTML Basics →</a>
+      <a href="burpsuite.html" class="btn btn-ghost">Full Burp Suite Guide →</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
