@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Basics — FIT2173</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">&#x1F512; FIT2173</a>
+  <a href="html-basics.html" class="active">HTML Basics</a>
+  <a href="login.html">SQLi Demo</a>
+  <a href="sqli.html">How SQLi Works</a>
+  <a href="burpsuite.html">Burp Suite</a>
+</nav>
+
+<div class="page">
+  <div class="badge" style="display:inline-block;background:rgba(88,166,255,0.15);color:var(--blue);border:1px solid rgba(88,166,255,0.3);padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-bottom:1rem">Section 1</div>
+  <h1>HTML Basics</h1>
+  <p>HTML (HyperText Markup Language) is the skeleton of every web page. Understanding how it works is essential for understanding how web attacks — like SQL injection — are possible.</p>
+
+  <!-- ── Page Structure ── -->
+  <h2>1. Page Structure</h2>
+  <p>Every HTML page follows the same basic skeleton. Tags wrap content and tell the browser how to render it.</p>
+
+  <pre><code><span style="color:var(--text2)">&lt;!-- Every page starts with this --&gt;</span>
+<span style="color:var(--blue)">&lt;!DOCTYPE html&gt;</span>
+<span style="color:var(--purple)">&lt;html</span> <span style="color:var(--orange)">lang</span>=<span style="color:var(--green)">"en"</span><span style="color:var(--purple)">&gt;</span>
+
+  <span style="color:var(--purple)">&lt;head&gt;</span>                        <span style="color:var(--text2)">&lt;!-- Metadata (not visible) --&gt;</span>
+    <span style="color:var(--purple)">&lt;meta</span> <span style="color:var(--orange)">charset</span>=<span style="color:var(--green)">"UTF-8"</span><span style="color:var(--purple)">&gt;</span>
+    <span style="color:var(--purple)">&lt;title&gt;</span>My Page<span style="color:var(--purple)">&lt;/title&gt;</span>
+    <span style="color:var(--purple)">&lt;link</span> <span style="color:var(--orange)">rel</span>=<span style="color:var(--green)">"stylesheet"</span> <span style="color:var(--orange)">href</span>=<span style="color:var(--green)">"style.css"</span><span style="color:var(--purple)">&gt;</span>
+  <span style="color:var(--purple)">&lt;/head&gt;</span>
+
+  <span style="color:var(--purple)">&lt;body&gt;</span>                        <span style="color:var(--text2)">&lt;!-- Visible page content --&gt;</span>
+    <span style="color:var(--purple)">&lt;h1&gt;</span>Hello World<span style="color:var(--purple)">&lt;/h1&gt;</span>
+    <span style="color:var(--purple)">&lt;p&gt;</span>This is a paragraph.<span style="color:var(--purple)">&lt;/p&gt;</span>
+  <span style="color:var(--purple)">&lt;/body&gt;</span>
+
+<span style="color:var(--purple)">&lt;/html&gt;</span></code></pre>
+
+  <!-- ── Common Tags ── -->
+  <h2>2. Common Tags</h2>
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin-top:0.5rem">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Tag</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Purpose</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Example</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code>&lt;h1&gt;–&lt;h6&gt;</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Headings (largest to smallest)</td>
+        <td style="padding:8px 12px"><code>&lt;h1&gt;Title&lt;/h1&gt;</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code>&lt;p&gt;</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Paragraph of text</td>
+        <td style="padding:8px 12px"><code>&lt;p&gt;Text here&lt;/p&gt;</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code>&lt;a&gt;</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Hyperlink</td>
+        <td style="padding:8px 12px"><code>&lt;a href="/page"&gt;Click&lt;/a&gt;</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code>&lt;form&gt;</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">User input container — sends data to server</td>
+        <td style="padding:8px 12px"><code>&lt;form action="/login" method="POST"&gt;</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code>&lt;input&gt;</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Text field, password box, checkbox etc.</td>
+        <td style="padding:8px 12px"><code>&lt;input type="text" name="user"&gt;</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px"><code>&lt;button&gt;</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Clickable button</td>
+        <td style="padding:8px 12px"><code>&lt;button type="submit"&gt;Login&lt;/button&gt;</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Forms ── -->
+  <h2>3. HTML Forms — How User Data Reaches the Server</h2>
+  <p>Forms are the primary way user input (like usernames and passwords) gets sent to a web server. The <code>action</code> attribute sets the URL, and <code>method</code> sets whether it's a <strong>GET</strong> or <strong>POST</strong> request.</p>
+
+  <pre><code><span style="color:var(--purple)">&lt;form</span>
+  <span style="color:var(--orange)">action</span>=<span style="color:var(--green)">"/login"</span>      <span style="color:var(--text2)">&lt;!-- Where to send the data --&gt;</span>
+  <span style="color:var(--orange)">method</span>=<span style="color:var(--green)">"POST"</span>      <span style="color:var(--text2)">&lt;!-- POST = data in body, GET = data in URL --&gt;</span>
+<span style="color:var(--purple)">&gt;</span>
+  <span style="color:var(--purple)">&lt;label&gt;</span>Username:<span style="color:var(--purple)">&lt;/label&gt;</span>
+  <span style="color:var(--purple)">&lt;input</span> <span style="color:var(--orange)">type</span>=<span style="color:var(--green)">"text"</span> <span style="color:var(--orange)">name</span>=<span style="color:var(--green)">"username"</span><span style="color:var(--purple)">&gt;</span>
+
+  <span style="color:var(--purple)">&lt;label&gt;</span>Password:<span style="color:var(--purple)">&lt;/label&gt;</span>
+  <span style="color:var(--purple)">&lt;input</span> <span style="color:var(--orange)">type</span>=<span style="color:var(--green)">"password"</span> <span style="color:var(--orange)">name</span>=<span style="color:var(--green)">"password"</span><span style="color:var(--purple)">&gt;</span>
+
+  <span style="color:var(--purple)">&lt;button</span> <span style="color:var(--orange)">type</span>=<span style="color:var(--green)">"submit"</span><span style="color:var(--purple)">&gt;</span>Log In<span style="color:var(--purple)">&lt;/button&gt;</span>
+<span style="color:var(--purple)">&lt;/form&gt;</span></code></pre>
+
+  <div class="alert alert-info">
+    <strong>Key insight:</strong> When you click "Submit", the browser packages the input field values into an HTTP request and sends them to the server. This is exactly what Burp Suite intercepts — and what SQL injection exploits.
+  </div>
+
+  <!-- ── GET vs POST ── -->
+  <h2>4. GET vs POST</h2>
+  <div class="compare">
+    <div class="compare-box vulnerable">
+      <div class="head">GET Request</div>
+      <pre style="padding:1rem;font-size:0.82rem">GET /search?q=laptops&amp;sort=price HTTP/1.1
+Host: shop.example.com
+
+<span style="color:var(--text2)"># Data visible in URL
+# Logged in browser history
+# Good for: searches, filters</span></pre>
+    </div>
+    <div class="compare-box safe">
+      <div class="head">POST Request</div>
+      <pre style="padding:1rem;font-size:0.82rem">POST /login HTTP/1.1
+Host: shop.example.com
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&amp;password=secret
+<span style="color:var(--text2)"># Data in request body
+# Not in URL/history
+# Good for: login, forms</span></pre>
+    </div>
+  </div>
+
+  <!-- ── Live Editor ── -->
+  <h2>5. Live HTML Editor</h2>
+  <p>Edit the HTML below and see it render in real time on the right.</p>
+
+  <div class="html-demo">
+    <div class="editor">
+      <div class="html-pane-label">HTML Code</div>
+      <textarea id="html-editor" spellcheck="false">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; padding: 16px; }
+    input { display: block; margin: 8px 0; padding: 6px; width: 100%; }
+    button { background: #0070f3; color: white; border: none;
+             padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;Login Form&lt;/h2&gt;
+  &lt;form&gt;
+    &lt;label&gt;Username:&lt;/label&gt;
+    &lt;input type="text" placeholder="Enter username"&gt;
+    &lt;label&gt;Password:&lt;/label&gt;
+    &lt;input type="password" placeholder="Enter password"&gt;
+    &lt;button type="submit"&gt;Log In&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+    </div>
+    <div class="preview">
+      <div class="html-pane-label" style="padding:8px 12px;background:#f6f8fa;border-bottom:1px solid #ddd;color:#555">Preview</div>
+      <iframe id="preview-frame" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+
+  <div class="alert alert-warning" style="margin-top:1.5rem">
+    <strong>Next:</strong> Now that you understand how forms send data to servers, let's see what happens when the server passes that data directly into a SQL query without checking it. <a href="login.html" style="color:var(--yellow);font-weight:bold">Go to the SQLi Demo →</a>
+  </div>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

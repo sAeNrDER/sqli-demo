@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLi Live Demo — FIT2173</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">&#x1F512; FIT2173</a>
+  <a href="html-basics.html">HTML Basics</a>
+  <a href="login.html" class="active">SQLi Demo</a>
+  <a href="sqli.html">How SQLi Works</a>
+  <a href="burpsuite.html">Burp Suite</a>
+</nav>
+
+<div class="page">
+  <div class="badge" style="display:inline-block;background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3);padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-bottom:1rem">&#x26A0; Intentionally Vulnerable — Educational Demo</div>
+  <h1>SQL Injection Live Demo</h1>
+  <p>This login form is <strong>deliberately vulnerable</strong>. Your input is inserted directly into a SQL query with no sanitization. Watch the live SQL preview update as you type, then try the attack payloads.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem">
+
+    <!-- ── LEFT: Vulnerable Login ── -->
+    <div>
+      <h2 style="margin-top:0;color:var(--red)">&#x1F480; Vulnerable Login</h2>
+
+      <div class="alert alert-danger" style="margin-bottom:1rem">
+        Uses string interpolation — input goes directly into SQL
+      </div>
+
+      <!-- Payload Quick-fill -->
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Quick payloads</div>
+        <div class="payload-group">
+          <button class="payload-btn" onclick="injectPayload('admin','password123')">&#x2705; Normal login</button>
+          <button class="payload-btn inject" onclick="injectPayload(&quot;'&quot;,'anything')">&#x1F50D; Error probe: '</button>
+          <button class="payload-btn inject" onclick="injectPayload(&quot;' or 1=1 -- &quot;,'anything')">&#x1F480; Login bypass</button>
+          <button class="payload-btn inject" onclick="injectPayload(&quot;' or '1'='1&quot;,'anything')">&#x1F480; Alt bypass</button>
+        </div>
+      </div>
+
+      <form id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="e.g. admin" value="admin">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="e.g. password123" value="password123">
+        </div>
+        <button type="submit" class="btn btn-danger" style="width:100%">Log In (Vulnerable)</button>
+      </form>
+
+      <div id="response-box" class="response-box"></div>
+    </div>
+
+    <!-- ── RIGHT: Safe Login ── -->
+    <div>
+      <h2 style="margin-top:0;color:var(--green)">&#x1F6E1;&#xFE0F; Safe Login (Fixed)</h2>
+
+      <div class="alert alert-success" style="margin-bottom:1rem">
+        Uses parameterized query — injection is impossible
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Try same payloads</div>
+        <div class="payload-group">
+          <button class="payload-btn" onclick="injectSafePayload('admin','password123')">&#x2705; Normal login</button>
+          <button class="payload-btn inject" onclick="injectSafePayload(&quot;' or 1=1 -- &quot;,'anything')">&#x1F480; Bypass attempt</button>
+        </div>
+      </div>
+
+      <form id="safe-login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="safe-username">Username</label>
+          <input type="text" id="safe-username" placeholder="e.g. admin" value="admin">
+        </div>
+        <div class="form-group">
+          <label for="safe-password">Password</label>
+          <input type="password" id="safe-password" placeholder="e.g. password123" value="password123">
+        </div>
+        <button type="submit" class="btn btn-green" style="width:100%">Log In (Safe)</button>
+      </form>
+
+      <div id="safe-response-box" class="response-box"></div>
+    </div>
+
+  </div><!-- end grid -->
+
+  <!-- ── SQL Live Preview ── -->
+  <h2>Live SQL Query Preview</h2>
+  <p>This is the exact SQL being built from your input in the <strong>vulnerable</strong> version. Watch what happens when you type <code>' or 1=1 -- </code> as the username.</p>
+
+  <div class="sql-preview">
+    <div class="label">&#x26A1; SQL executed on the server (vulnerable version)</div>
+    <div id="sql-preview-text" style="font-size:0.9rem;line-height:1.8"></div>
+  </div>
+
+  <!-- ── Code comparison ── -->
+  <h2>Why It's Vulnerable vs. Safe</h2>
+  <div class="compare">
+    <div class="compare-box vulnerable">
+      <div class="head">&#x1F480; Vulnerable Code (server.js)</div>
+      <pre><code><span style="color:var(--text2)">// UNSAFE: string interpolation</span>
+const sql = `SELECT * FROM users
+  WHERE username='<span style="color:var(--red)">${username}</span>'
+  AND password='<span style="color:var(--red)">${password}</span>'`;
+
+db.prepare(sql).all();</code></pre>
+    </div>
+    <div class="compare-box safe">
+      <div class="head">&#x2705; Safe Code (server.js)</div>
+      <pre><code><span style="color:var(--text2)">// SAFE: parameterized query</span>
+const sql = `SELECT * FROM users
+  WHERE username=<span style="color:var(--green)">?</span>
+  AND password=<span style="color:var(--green)">?</span>`;
+
+db.prepare(sql).all(<span style="color:var(--green)">username, password</span>);</code></pre>
+    </div>
+  </div>
+
+  <!-- ── Burp tip ── -->
+  <h2>&#x1F6E1;&#xFE0F; Intercept This With Burp Suite</h2>
+  <p>Configure Burp Suite's proxy to intercept traffic to <code>localhost:3000</code>. When you click "Log In", you'll see the raw HTTP POST request — and can modify the username/password directly in Burp before forwarding.</p>
+
+  <div class="http-block">
+<span class="http-method">POST</span> <span class="http-path">/api/login-vulnerable</span> HTTP/1.1
+<span class="http-header-name">Host:</span> <span class="http-header-val">localhost:3000</span>
+<span class="http-header-name">Content-Type:</span> <span class="http-header-val">application/json</span>
+<span class="http-header-name">Content-Length:</span> <span class="http-header-val">46</span>
+
+<span class="http-body">{"username":"admin","password":"password123"}</span>
+  </div>
+
+  <p>After intercepting, change the username value to <code class="http-highlight">' or 1=1 -- </code> and forward — the server will bypass authentication.</p>
+
+  <a href="burpsuite.html" class="btn btn-ghost" style="margin-top:0.5rem">Learn how to use Burp Suite →</a>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

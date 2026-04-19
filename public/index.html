@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIT2173 — Web Security Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">&#x1F512; FIT2173</a>
+  <a href="html-basics.html">HTML Basics</a>
+  <a href="login.html">SQLi Demo</a>
+  <a href="sqli.html">How SQLi Works</a>
+  <a href="burpsuite.html">Burp Suite</a>
+</nav>
+
+<div class="page">
+  <div class="hero">
+    <div class="badge">FIT2173 / FIT3173 &mdash; Web Security Lab 7</div>
+    <h1>SQL Injection &amp; Burp Suite</h1>
+    <p>An interactive demo covering HTML fundamentals, SQL injection attacks, and using Burp Suite as a web proxy.</p>
+  </div>
+
+  <h2>What We'll Cover Today</h2>
+
+  <div class="cards">
+    <a href="html-basics.html" class="card">
+      <div class="icon">&#x1F4C4;</div>
+      <h3>HTML Basics</h3>
+      <p>Structure of a web page, forms, inputs, and how browsers send data to servers.</p>
+    </a>
+    <a href="login.html" class="card">
+      <div class="icon">&#x1F480;</div>
+      <h3>SQLi Live Demo</h3>
+      <p>A real vulnerable login form. Watch the SQL query update as you type — then break it.</p>
+    </a>
+    <a href="sqli.html" class="card">
+      <div class="icon">&#x1F9EA;</div>
+      <h3>How SQLi Works</h3>
+      <p>Why injections happen, how payloads are crafted, and how to defend with parameterized queries.</p>
+    </a>
+    <a href="burpsuite.html" class="card">
+      <div class="icon">&#x1F6E1;&#xFE0F;</div>
+      <h3>Burp Suite Guide</h3>
+      <p>Intercept, inspect and modify HTTP requests. Covers Proxy, HTTP History, and Repeater.</p>
+    </a>
+  </div>
+
+  <h2>Demo Database</h2>
+  <p>The server runs an in-memory SQLite database seeded with these users. You can see the live contents below.</p>
+
+  <div id="db-table">Loading...</div>
+
+  <h2>Quick Reference — Demo Payloads</h2>
+  <p>Use these on the <a href="login.html" style="color:var(--blue)">SQLi Demo</a> page:</p>
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin-top:0.5rem">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Type</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Username</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Password</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--green)">Normal login</td>
+        <td style="padding:8px 12px"><code>admin</code></td>
+        <td style="padding:8px 12px"><code>password123</code></td>
+        <td style="padding:8px 12px;color:var(--green)">Login succeeds</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--red)">Error probe</td>
+        <td style="padding:8px 12px"><code>'</code></td>
+        <td style="padding:8px 12px"><code>anything</code></td>
+        <td style="padding:8px 12px;color:var(--red)">500 DB error — injectable!</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--red)">Login bypass</td>
+        <td style="padding:8px 12px"><code>' or 1=1 -- </code></td>
+        <td style="padding:8px 12px"><code>anything</code></td>
+        <td style="padding:8px 12px;color:var(--red)">Bypasses auth entirely!</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;color:var(--green)">Safe version</td>
+        <td style="padding:8px 12px"><code>' or 1=1 -- </code></td>
+        <td style="padding:8px 12px"><code>anything</code></td>
+        <td style="padding:8px 12px;color:var(--green)">Blocked by parameterized query</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script src="demo.js"></script>
+<script>
+// Load live DB contents
+fetch('/api/db-info')
+  .then(r => r.json())
+  .then(data => {
+    let html = `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:0.5rem">
+      <div style="padding:0.5rem 1rem;font-size:0.75rem;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.05em">
+        Table: ${data.table}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:0.88rem">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:8px 12px;color:var(--text2)">id</th>
+          <th style="text-align:left;padding:8px 12px;color:var(--text2)">username</th>
+          <th style="text-align:left;padding:8px 12px;color:var(--text2)">password</th>
+          <th style="text-align:left;padding:8px 12px;color:var(--text2)">role</th>
+        </tr></thead><tbody>`;
+    data.rows.forEach(r => {
+      html += `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--purple)">${r.id}</td>
+        <td style="padding:8px 12px;font-family:monospace">${r.username}</td>
+        <td style="padding:8px 12px;font-family:monospace;color:var(--red)">${r.password}</td>
+        <td style="padding:8px 12px;color:${r.role==='admin'?'var(--yellow)':'var(--text2)'}">${r.role}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('db-table').innerHTML = html;
+  });
+</script>
+</body>
+</html>

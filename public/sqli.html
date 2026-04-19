@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How SQL Injection Works — FIT2173</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">&#x1F512; FIT2173</a>
+  <a href="html-basics.html">HTML Basics</a>
+  <a href="login.html">SQLi Demo</a>
+  <a href="sqli.html" class="active">How SQLi Works</a>
+  <a href="burpsuite.html">Burp Suite</a>
+</nav>
+
+<div class="page">
+  <div class="badge" style="display:inline-block;background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3);padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-bottom:1rem">Section 3</div>
+  <h1>How SQL Injection Works</h1>
+  <p>SQL injection (SQLi) is the #1 web vulnerability for over two decades. It happens when user-controlled input is embedded directly into a SQL query — letting attackers rewrite the query logic entirely.</p>
+
+  <!-- ── What is SQL ── -->
+  <h2>1. What is SQL?</h2>
+  <p>SQL (Structured Query Language) is used to talk to databases. Web apps run SQL queries constantly — fetching users, checking passwords, retrieving products.</p>
+
+  <pre><code><span style="color:var(--text2)">-- Get all products in the 'electronics' category</span>
+<span class="sql-keyword">SELECT</span> name, price <span class="sql-keyword">FROM</span> products
+<span class="sql-keyword">WHERE</span> category = <span class="sql-string">'electronics'</span>;
+
+<span style="color:var(--text2)">-- Check login credentials</span>
+<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users
+<span class="sql-keyword">WHERE</span> username = <span class="sql-string">'admin'</span> <span class="sql-keyword">AND</span> password = <span class="sql-string">'password123'</span>;</code></pre>
+
+  <!-- ── How the vulnerability arises ── -->
+  <h2>2. How the Vulnerability Arises</h2>
+  <p>A developer writes code like this — taking input from a login form and embedding it directly into a query string:</p>
+
+  <pre><code><span style="color:var(--text2)">// JavaScript / Node.js example</span>
+const username = req.body.username;  <span style="color:var(--text2)">// e.g. "admin"</span>
+const password = req.body.password;  <span style="color:var(--text2)">// e.g. "password123"</span>
+
+const sql = `SELECT * FROM users
+             WHERE username='<span style="color:var(--red)">${username}</span>'
+             AND password='<span style="color:var(--red)">${password}</span>'`;</code></pre>
+
+  <p>With normal input, this produces a safe query:</p>
+  <pre><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users
+<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'admin'</span> <span class="sql-keyword">AND</span> password=<span class="sql-string">'password123'</span></code></pre>
+
+  <!-- ── The attack ── -->
+  <h2>3. The Attack — Breaking Out of the String</h2>
+  <p>An attacker enters <code>' or 1=1 -- </code> as the username (note the trailing space after <code>--</code>). Let's trace what happens:</p>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin:1rem 0">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem 1rem;font-size:0.88rem;align-items:start">
+      <div style="color:var(--text2);white-space:nowrap">Input:</div>
+      <div><code style="color:var(--red)">username = ' or 1=1 -- </code></div>
+      <div style="color:var(--text2);white-space:nowrap">Password:</div>
+      <div><code>anything</code></div>
+      <div style="color:var(--text2);white-space:nowrap">Resulting SQL:</div>
+      <div></div>
+    </div>
+    <pre style="margin-top:0.75rem"><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users <span class="sql-keyword">WHERE</span> username=<span class="sql-string">''</span> <span class="sql-keyword">or</span> <span style="color:var(--red);font-weight:bold">1=1</span> <span class="sql-comment">-- ' and password='anything'</span></code></pre>
+  </div>
+
+  <p>Breaking it down piece by piece:</p>
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin:0.5rem 0 1.5rem">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Fragment</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">What it does</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code style="color:var(--red)">'</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Closes the opening quote around username — escapes the string context</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px"><code style="color:var(--red)">or 1=1</code></td>
+        <td style="padding:8px 12px;color:var(--text2)">Always evaluates to TRUE — makes the WHERE clause match every row</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px"><code style="color:var(--text2)">-- </code></td>
+        <td style="padding:8px 12px;color:var(--text2)">SQL comment — ignores everything after it (the password check disappears)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-danger">
+    <strong>Result:</strong> The query returns ALL rows in the users table. The app sees "rows returned &gt; 0" and logs you in as the first user — usually <strong>admin</strong>.
+  </div>
+
+  <!-- ── Error probing ── -->
+  <h2>4. Error Probing — How Attackers Discover SQLi</h2>
+  <p>Before crafting a bypass, attackers first confirm the field is injectable by sending a single quote <code>'</code>:</p>
+
+  <pre><code><span style="color:var(--text2)">-- What gets built when username = '</span>
+<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users <span class="sql-keyword">WHERE</span> username=<span class="sql-string">'<span style="color:var(--red)">'</span>'</span> <span class="sql-keyword">AND</span> password=<span class="sql-string">'anything'</span>
+<span style="color:var(--text2)">                                       ↑ Unmatched quote → syntax error!</span></code></pre>
+
+  <p>The database throws a syntax error. If the app returns a <strong>500 Internal Server Error</strong> (instead of just "invalid credentials"), it confirms the input is being passed to SQL — the field is injectable.</p>
+
+  <!-- ── Other attack types ── -->
+  <h2>5. Other SQL Injection Types</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>WHERE clause injection (hidden data retrieval)</h3>
+      <p>Used in product/search pages. Append <code>' OR '1'='1</code> to a category filter to retrieve hidden/unreleased items.</p>
+      <pre style="margin-top:0.5rem"><code>GET /products?category=<span style="color:var(--red)">Gifts' OR '1'='1</span>
+
+<span style="color:var(--text2)">-- Becomes:</span>
+<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> category=<span class="sql-string">'Gifts'</span> <span class="sql-keyword">OR</span> <span style="color:var(--red)">'1'='1'</span></code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>UNION-based injection (data extraction)</h3>
+      <p>Append a <code>UNION SELECT</code> to extract data from other tables — like usernames, passwords, or secrets.</p>
+      <pre style="margin-top:0.5rem"><code>' <span class="sql-keyword">UNION SELECT</span> username, password <span class="sql-keyword">FROM</span> users <span class="sql-comment">--</span></code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Blind injection (boolean/time-based)</h3>
+      <p>When no error is shown, inject conditions that change page behaviour or add delays — inferring data one bit at a time.</p>
+      <pre style="margin-top:0.5rem"><code>' <span class="sql-keyword">AND</span> SLEEP(5) <span class="sql-comment">-- </span>  <span style="color:var(--text2)">(page loads 5s slower = injectable!)</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ── Defense ── -->
+  <h2>6. Defense — Parameterized Queries</h2>
+  <p>The fix is simple: never concatenate user input into SQL. Use <strong>parameterized queries</strong> (also called prepared statements). The database treats the input as a literal value — not executable SQL.</p>
+
+  <div class="compare">
+    <div class="compare-box vulnerable">
+      <div class="head">&#x1F480; Vulnerable</div>
+      <pre><code><span style="color:var(--text2)">// Input goes INTO the SQL string</span>
+const sql = `WHERE username='${u}'
+             AND password='${p}'`;
+
+<span style="color:var(--text2)">// Attacker controls SQL logic!</span></code></pre>
+    </div>
+    <div class="compare-box safe">
+      <div class="head">&#x2705; Safe (parameterized)</div>
+      <pre><code><span style="color:var(--text2)">// ? placeholders — input is data only</span>
+const sql = `WHERE username=?
+             AND password=?`;
+
+db.prepare(sql).all(u, p);
+<span style="color:var(--text2)">// Input CANNOT change query structure</span></code></pre>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Rule of thumb:</strong> If you ever find yourself building a SQL string with <code>+</code>, template literals, or string formatting — stop and use a parameterized query instead.
+  </div>
+
+  <!-- ── PortSwigger labs ── -->
+  <h2>7. Practice — PortSwigger Academy Labs</h2>
+  <p>From the lab sheet, these are the two labs to complete:</p>
+
+  <div class="step">
+    <div class="step-num" style="background:var(--red)">1</div>
+    <div class="step-body">
+      <h3>SQL injection vulnerability allowing login bypass</h3>
+      <p>Use <code>' or 1=1 -- </code> as the username to log in as the administrator without knowing the password. Intercept the login POST with Burp Suite and modify the username parameter.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:var(--red)">2</div>
+    <div class="step-body">
+      <h3>SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</h3>
+      <p>Modify the product category filter in the URL to return hidden/unreleased items by injecting into the WHERE clause.</p>
+    </div>
+  </div>
+
+  <a href="login.html" class="btn btn-danger" style="margin-top:1rem;margin-right:0.75rem">Try the Live Demo</a>
+  <a href="burpsuite.html" class="btn btn-ghost" style="margin-top:1rem">Learn Burp Suite →</a>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

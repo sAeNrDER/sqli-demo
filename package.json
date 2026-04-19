@@ -1,0 +1,13 @@
+{
+  "name": "sqli-demo",
+  "version": "1.0.0",
+  "description": "FIT2173 SQL Injection & Burp Suite Demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sql.js": "^1.10.3"
+  }
+}
