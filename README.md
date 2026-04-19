@@ -6,35 +6,59 @@ An interactive educational website for **FIT2173/FIT3173 Web Security Lab 7**. C
 
 ---
 
-## Pages
+## Quick Start (Windows — Recommended)
 
-| Page | Description |
-|------|-------------|
-| **Home** `/` | Overview, demo database viewer, and quick-reference payload table |
-| **HTML Basics** `/html-basics.html` | Page structure, forms, GET vs POST, live HTML editor |
-| **SQLi Live Demo** `/login.html` | Vulnerable vs safe login side-by-side with live SQL query preview |
-| **How SQLi Works** `/sqli.html` | Breakdown of injection payloads, error probing, and parameterized query defense |
-| **Burp Suite Guide** `/burpsuite.html` | Step-by-step proxy walkthrough matching Lab 7 instructions |
+**Prerequisite:** [Node.js v18+](https://nodejs.org) must be installed.
+
+### Option A — One double-click
+
+1. Clone or download the repo
+2. Double-click **`start.bat`**
+
+That's it. The script installs dependencies (first run only) and opens your browser automatically.
 
 ---
 
-## Getting Started
+### Option B — One-liner (PowerShell / CMD)
 
-**Prerequisites:** [Node.js](https://nodejs.org) v18+
+Paste this into PowerShell or Command Prompt — clones, installs, and starts in one go:
+
+```powershell
+git clone https://github.com/sAeNrDER/sqli-demo.git; cd sqli-demo; npm install; node server.js
+```
+
+Then open **http://localhost:3000**.
+
+---
+
+### Option C — Manual steps
 
 ```bash
 # 1. Clone the repo
 git clone https://github.com/sAeNrDER/sqli-demo.git
 cd sqli-demo
 
-# 2. Install dependencies
+# 2. Install dependencies (first time only)
 npm install
 
 # 3. Start the server
 node server.js
 ```
 
-Then open **http://localhost:3000** in your browser.
+Then open **http://localhost:3000**.
+
+---
+
+## Pages
+
+| Page | URL | Description |
+|------|-----|-------------|
+| **Lab Setup** | `/setup.html` | PortSwigger account registration + Burp Suite proxy setup |
+| **Home** | `/` | Overview, live DB viewer, quick-reference payload table |
+| **HTML Basics** | `/html-basics.html` | Page structure, forms, GET vs POST, live HTML editor |
+| **SQLi Live Demo** | `/login.html` | Vulnerable vs safe login, Retrieving Hidden Data activity, Prevention guide |
+| **How SQLi Works** | `/sqli.html` | Injection mechanics, error probing, parameterized query defence |
+| **Burp Suite Guide** | `/burpsuite.html` | Step-by-step proxy walkthrough matching Lab 7 instructions |
 
 ---
 
@@ -46,8 +70,9 @@ Try these on the **SQLi Live Demo** page:
 |------|----------|----------|--------|
 | Normal login | `admin` | `password123` | Login succeeds |
 | Error probe | `'` | anything | 500 DB error — confirms injection |
-| Login bypass | `' or 1=1 -- ` | anything | Bypasses auth, returns all users |
-| Safe version | `' or 1=1 -- ` | anything | Blocked by parameterized query |
+| Login bypass (all users) | `' or 1=1 -- ` | anything | Returns every row, logs in as admin |
+| Login bypass (targeted) | `admin'--` | anything | Bypasses password check for admin specifically |
+| Safe version | `' or 1=1 -- ` | anything | Blocked — parameterized query |
 
 ---
 
@@ -55,27 +80,19 @@ Try these on the **SQLi Live Demo** page:
 
 ```
 sqli-demo/
-├── server.js          # Express server with vulnerable + safe API endpoints
+├── start.bat              # Windows one-click launcher
+├── server.js              # Express server — vulnerable + safe API endpoints
 ├── package.json
 └── public/
+    ├── setup.html         # Lab setup guide (PortSwigger + Burp proxy)
     ├── index.html         # Homepage
     ├── html-basics.html   # HTML fundamentals
-    ├── login.html         # Vulnerable login demo
+    ├── login.html         # Vulnerable login + hidden data + prevention demo
     ├── sqli.html          # SQL injection explained
     ├── burpsuite.html     # Burp Suite guide
     ├── style.css          # Dark security theme
     └── demo.js            # Live SQL preview + form interactivity
 ```
-
----
-
-## Using with Burp Suite
-
-1. Start the server (`node server.js`)
-2. In Burp Suite, set the proxy to intercept `localhost:3000`
-3. Submit the login form on `/login.html` with **Intercept on**
-4. Modify the `username` field to `' or 1=1 -- ` and forward
-5. Observe the server bypass in the response
 
 ---
 
@@ -86,6 +103,19 @@ sqli-demo/
 | `GET` | `/api/db-info` | Returns all rows in the users table |
 | `POST` | `/api/login-vulnerable` | Intentionally injectable login (string interpolation) |
 | `POST` | `/api/login-safe` | Safe login using parameterized queries |
+| `GET` | `/api/products` | Injectable product filter (WHERE clause injection) |
+| `GET` | `/api/products-safe` | Safe product filter (parameterized) |
+
+---
+
+## Using with Burp Suite
+
+1. Start the server (`start.bat` or `node server.js`)
+2. In Burp Suite → **Proxy → Open browser** (easiest) or configure Firefox to proxy via `127.0.0.1:8080`
+3. Navigate to `http://localhost:3000/login.html` in the Burp browser
+4. Submit the login form with **Intercept on**
+5. Modify the `username` field to `' or 1=1 -- ` and forward
+6. Observe the bypass in the response
 
 ---
 
