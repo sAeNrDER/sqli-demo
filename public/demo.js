@@ -10,17 +10,39 @@ function updateSqlPreview() {
   const u = userEl.value || '';
   const p = passEl ? passEl.value || '' : '';
 
-  const uEsc = escHtml(u);
-  const pEsc = escHtml(p);
+  // Detect if a SQL comment (-- or #) appears in the username input,
+  // which would cause everything after it to be ignored by the database.
+  const commentMatch = u.match(/^(.*?)(--.*|#.*)$/s);
 
-  // Highlight injected content in red
-  const uHighlight = uEsc ? `<span class="sql-inject">${uEsc}</span>` : '';
-  const pHighlight = pEsc ? `<span class="sql-inject">${pEsc}</span>` : '';
+  let uRendered, passwordClause;
+
+  if (commentMatch) {
+    // Split: part before comment (still inside the string), then the comment which
+    // breaks out and swallows the rest of the query.
+    const beforeComment = escHtml(commentMatch[1]);
+    const commentPart   = escHtml(commentMatch[2]);
+    uRendered =
+      `<span class="sql-inject">${beforeComment}</span>` +
+      `<span class="sql-string">'</span>` +   // the closing quote from the template
+      `<span class="sql-inject" style="background:rgba(248,81,73,0.15);border-radius:2px">${commentPart}</span>`;
+    // Everything after the comment is grayed out (treated as a comment by the DB)
+    passwordClause =
+      `<span class="sql-comment" style="text-decoration:line-through;opacity:0.45"> AND password='${escHtml(p)}'</span>` +
+      `<span style="color:var(--text2);font-size:0.8em;margin-left:8px">← commented out!</span>`;
+  } else {
+    // No comment — normal highlight
+    const uEsc = escHtml(u);
+    const pEsc = escHtml(p);
+    const uHighlight = uEsc ? `<span class="sql-inject">${uEsc}</span>` : '';
+    const pHighlight = pEsc ? `<span class="sql-inject">${pEsc}</span>` : '';
+    uRendered     = `${uHighlight}<span class="sql-string">'</span>`;
+    passwordClause = ` <span class="sql-keyword">AND</span> password=<span class="sql-string">'${pHighlight}'</span>`;
+  }
 
   previewEl.innerHTML =
     `<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users ` +
-    `<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'${uHighlight}'</span> ` +
-    `<span class="sql-keyword">AND</span> password=<span class="sql-string">'${pHighlight}'</span>`;
+    `<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'</span>${uRendered}` +
+    passwordClause;
 }
 
 function escHtml(str) {

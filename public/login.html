@@ -38,7 +38,7 @@
           <button class="payload-btn" onclick="injectPayload('admin','password123')">&#x2705; Normal login</button>
           <button class="payload-btn inject" onclick="injectPayload(&quot;'&quot;,'anything')">&#x1F50D; Error probe: '</button>
           <button class="payload-btn inject" onclick="injectPayload(&quot;' or 1=1 -- &quot;,'anything')">&#x1F480; Login bypass</button>
-          <button class="payload-btn inject" onclick="injectPayload(&quot;' or '1'='1&quot;,'anything')">&#x1F480; Alt bypass</button>
+          <button class="payload-btn inject" onclick="injectPayload(&quot;admin'--&quot;,'anything')">&#x1F3AF; Target admin (no password)</button>
         </div>
       </div>
 
