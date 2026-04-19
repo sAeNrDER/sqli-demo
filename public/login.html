@@ -3,142 +3,599 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SQLi Live Demo — FIT2173</title>
+  <title>SQLi Labs — FIT2173</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <nav>
   <a href="/" class="logo">&#x1F512; FIT2173</a>
   <a href="html-basics.html">HTML Basics</a>
-  <a href="login.html" class="active">SQLi Demo</a>
+  <a href="login.html" class="active">SQLi Labs</a>
   <a href="sqli.html">How SQLi Works</a>
   <a href="burpsuite.html">Burp Suite</a>
 </nav>
 
-<div class="page">
-  <div class="badge" style="display:inline-block;background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3);padding:4px 12px;border-radius:20px;font-size:0.8rem;margin-bottom:1rem">&#x26A0; Intentionally Vulnerable — Educational Demo</div>
-  <h1>SQL Injection Live Demo</h1>
-  <p>This login form is <strong>deliberately vulnerable</strong>. Your input is inserted directly into a SQL query with no sanitization. Watch the live SQL preview update as you type, then try the attack payloads.</p>
+<!-- ── Lab Tab Switcher ─────────────────────────────────────────── -->
+<div class="lab-tabs">
+  <button class="lab-tab-btn active" onclick="switchLab(1)">
+    <span class="lab-num">LAB 1</span> Login Bypass
+  </button>
+  <button class="lab-tab-btn" onclick="switchLab(2)">
+    <span class="lab-num">LAB 2</span> Hidden Data Retrieval
+  </button>
+</div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem">
+<!-- ════════════════════════════════════════════════════════════════
+     LAB 1 — SQL injection vulnerability allowing login bypass
+     ════════════════════════════════════════════════════════════════ -->
+<div class="lab-panel active" id="lab1">
 
-    <!-- ── LEFT: Vulnerable Login ── -->
-    <div>
-      <h2 style="margin-top:0;color:var(--red)">&#x1F480; Vulnerable Login</h2>
-
-      <div class="alert alert-danger" style="margin-bottom:1rem">
-        Uses string interpolation — input goes directly into SQL
+  <!-- Header -->
+  <div class="lab-header">
+    <div class="lab-header-left">
+      <div class="lab-title">SQL injection vulnerability allowing login bypass</div>
+      <div class="lab-meta">
+        <span class="lab-difficulty apprentice">&#x2B24; APPRENTICE</span>
+        <span class="lab-source">Source: <a href="https://portswigger.net/web-security/sql-injection/lab-login-bypass" target="_blank">PortSwigger Web Security Academy ↗</a></span>
       </div>
-
-      <!-- Payload Quick-fill -->
-      <div style="margin-bottom:1rem">
-        <div style="font-size:0.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Quick payloads</div>
-        <div class="payload-group">
-          <button class="payload-btn" onclick="injectPayload('admin','password123')">&#x2705; Normal login</button>
-          <button class="payload-btn inject" onclick="injectPayload(&quot;'&quot;,'anything')">&#x1F50D; Error probe: '</button>
-          <button class="payload-btn inject" onclick="injectPayload(&quot;' or 1=1 -- &quot;,'anything')">&#x1F480; Login bypass</button>
-          <button class="payload-btn inject" onclick="injectPayload(&quot;' or '1'='1&quot;,'anything')">&#x1F480; Alt bypass</button>
-        </div>
-      </div>
-
-      <form id="login-form" autocomplete="off">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" placeholder="e.g. admin" value="admin">
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="e.g. password123" value="password123">
-        </div>
-        <button type="submit" class="btn btn-danger" style="width:100%">Log In (Vulnerable)</button>
-      </form>
-
-      <div id="response-box" class="response-box"></div>
     </div>
-
-    <!-- ── RIGHT: Safe Login ── -->
-    <div>
-      <h2 style="margin-top:0;color:var(--green)">&#x1F6E1;&#xFE0F; Safe Login (Fixed)</h2>
-
-      <div class="alert alert-success" style="margin-bottom:1rem">
-        Uses parameterized query — injection is impossible
-      </div>
-
-      <div style="margin-bottom:1rem">
-        <div style="font-size:0.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Try same payloads</div>
-        <div class="payload-group">
-          <button class="payload-btn" onclick="injectSafePayload('admin','password123')">&#x2705; Normal login</button>
-          <button class="payload-btn inject" onclick="injectSafePayload(&quot;' or 1=1 -- &quot;,'anything')">&#x1F480; Bypass attempt</button>
-        </div>
-      </div>
-
-      <form id="safe-login-form" autocomplete="off">
-        <div class="form-group">
-          <label for="safe-username">Username</label>
-          <input type="text" id="safe-username" placeholder="e.g. admin" value="admin">
-        </div>
-        <div class="form-group">
-          <label for="safe-password">Password</label>
-          <input type="password" id="safe-password" placeholder="e.g. password123" value="password123">
-        </div>
-        <button type="submit" class="btn btn-green" style="width:100%">Log In (Safe)</button>
-      </form>
-
-      <div id="safe-response-box" class="response-box"></div>
-    </div>
-
-  </div><!-- end grid -->
-
-  <!-- ── SQL Live Preview ── -->
-  <h2>Live SQL Query Preview</h2>
-  <p>This is the exact SQL being built from your input in the <strong>vulnerable</strong> version. Watch what happens when you type <code>' or 1=1 -- </code> as the username.</p>
-
-  <div class="sql-preview">
-    <div class="label">&#x26A1; SQL executed on the server (vulnerable version)</div>
-    <div id="sql-preview-text" style="font-size:0.9rem;line-height:1.8"></div>
   </div>
 
-  <!-- ── Code comparison ── -->
-  <h2>Why It's Vulnerable vs. Safe</h2>
-  <div class="compare">
-    <div class="compare-box vulnerable">
-      <div class="head">&#x1F480; Vulnerable Code (server.js)</div>
-      <pre><code><span style="color:var(--text2)">// UNSAFE: string interpolation</span>
+  <!-- Two-column layout -->
+  <div class="lab-layout">
+
+    <!-- LEFT: Description -->
+    <div class="lab-desc">
+      <h3>Lab Description</h3>
+      <p>This lab contains a SQL injection vulnerability in the login function. To solve the lab, perform a SQL injection attack that <strong>logs in to the application as the administrator user</strong>.</p>
+
+      <h3>Background</h3>
+      <p>The login query is built by concatenating user input directly into a SQL string:</p>
+      <pre style="font-size:0.78rem;margin:0.5rem 0"><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users
+<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'[input]'</span>
+<span class="sql-keyword">AND</span> password=<span class="sql-string">'[input]'</span></code></pre>
+      <p>Injecting into the username field can break the query structure entirely.</p>
+
+      <h3>Task</h3>
+      <div class="task-item" id="lab1-task1">
+        <span class="task-icon">&#x25CB;</span>
+        <span>Log in as <strong>administrator</strong> without knowing the password</span>
+      </div>
+      <div class="task-item" id="lab1-task2">
+        <span class="task-icon">&#x25CB;</span>
+        <span>Confirm injection bypasses the password check entirely</span>
+      </div>
+
+      <h3>Payloads to try</h3>
+      <div class="payload-group">
+        <button class="payload-btn" onclick="setLab1('administrator','password123')">&#x2705; Normal login</button>
+        <button class="payload-btn inject" onclick="setLab1(&quot;'&quot;,'x')">&#x1F50D; Error probe <code>'</code></button>
+        <button class="payload-btn inject" onclick="setLab1(&quot;administrator'--&quot;,'x')">&#x1F480; Admin bypass</button>
+        <button class="payload-btn inject" onclick="setLab1(&quot;' or 1=1-- &quot;,'x')">&#x1F480; OR 1=1 bypass</button>
+      </div>
+
+      <h3 style="margin-top:1.25rem">How the bypass works</h3>
+      <p>Payload: <code>administrator'--</code></p>
+      <pre style="font-size:0.78rem;margin:0.5rem 0"><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users <span class="sql-keyword">WHERE</span>
+username=<span class="sql-string">'administrator'</span><span class="sql-comment">--' AND password='x'</span>
+<span style="color:var(--text2)">         └─ closes string   └─ commented out!</span></code></pre>
+
+      <div class="alert alert-warning" style="margin-top:0.75rem;font-size:0.82rem">
+        <strong>Burp tip:</strong> Intercept the POST to <code>/api/login-vulnerable</code> and edit the username field directly in Burp before forwarding.
+      </div>
+    </div>
+
+    <!-- RIGHT: Vulnerable App -->
+    <div class="lab-app">
+      <!-- Solved banner -->
+      <div class="lab-solved-banner" id="lab1-solved">
+        <span class="confetti">&#x1F389;</span>
+        Congratulations, you solved the lab! Logged in as <strong id="lab1-solved-user" style="margin:0 4px"></strong>
+      </div>
+
+      <!-- macOS-style browser chrome -->
+      <div class="lab-app-bar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="lab-url-bar" id="lab1-url">localhost:3000/login</div>
+      </div>
+
+      <div class="lab-app-content">
+        <!-- Tabs: Vulnerable | Safe -->
+        <div style="display:flex;gap:0;border-bottom:1px solid #dde1e7;margin-bottom:1.5rem">
+          <button id="l1-vuln-tab" onclick="switchLoginTab('vuln')"
+            style="padding:8px 16px;background:none;border:none;border-bottom:3px solid #cf222e;color:#cf222e;font-weight:600;font-size:0.83rem;cursor:pointer">
+            &#x1F480; Vulnerable
+          </button>
+          <button id="l1-safe-tab" onclick="switchLoginTab('safe')"
+            style="padding:8px 16px;background:none;border:none;border-bottom:3px solid transparent;color:#57606a;font-size:0.83rem;cursor:pointer">
+            &#x1F6E1;&#xFE0F; Safe (Fixed)
+          </button>
+        </div>
+
+        <!-- Vulnerable login -->
+        <div id="l1-vuln-pane">
+          <div class="app-login-box">
+            <h2>My Account</h2>
+            <p>Sign in to your account</p>
+            <form id="lab1-form" autocomplete="off" onsubmit="submitLab1(event)">
+              <label>Username</label>
+              <input type="text" id="lab1-username" value="administrator" autocomplete="off">
+              <label>Password</label>
+              <input type="password" id="lab1-password" value="password123" autocomplete="off">
+              <button type="submit" class="app-login-btn">Log in</button>
+            </form>
+            <div class="app-error" id="lab1-error"></div>
+            <div class="app-success" id="lab1-success"></div>
+          </div>
+        </div>
+
+        <!-- Safe login -->
+        <div id="l1-safe-pane" style="display:none">
+          <div class="app-login-box">
+            <h2>My Account</h2>
+            <p>Sign in (injection-proof version)</p>
+            <form id="lab1-safe-form" autocomplete="off" onsubmit="submitLab1Safe(event)">
+              <label>Username</label>
+              <input type="text" id="lab1-safe-username" value="administrator" autocomplete="off">
+              <label>Password</label>
+              <input type="password" id="lab1-safe-password" value="password123" autocomplete="off">
+              <button type="submit" class="app-login-btn" style="background:#0969da">Log in (Safe)</button>
+            </form>
+            <div class="app-error" id="lab1-safe-error"></div>
+            <div class="app-success" id="lab1-safe-success"></div>
+          </div>
+          <div class="alert alert-success" style="max-width:360px;margin:1rem auto 0;font-size:0.82rem">
+            Try <code>' or 1=1-- </code> as username — the parameterized query treats it as literal text, login fails safely.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end lab-layout -->
+
+  <!-- SQL Live Preview -->
+  <div class="lab-sql-section">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem">
+      <h2 style="margin:0;font-size:1rem;color:var(--yellow)">&#x26A1; Live SQL Query Preview</h2>
+      <span style="font-size:0.8rem;color:var(--text2)">Updates as you type in the form above</span>
+    </div>
+    <div class="sql-preview">
+      <div class="label">SQL executed on the server (vulnerable version)</div>
+      <div id="sql-preview-text" style="font-size:0.9rem;line-height:1.8"></div>
+    </div>
+  </div>
+
+  <!-- Code comparison + Burp -->
+  <div class="lab-bottom">
+    <h2>Why It's Vulnerable vs. Safe</h2>
+    <div class="compare">
+      <div class="compare-box vulnerable">
+        <div class="head">&#x1F480; Vulnerable — string interpolation</div>
+        <pre><code><span style="color:var(--text2)">// Input injected directly into SQL</span>
 const sql = `SELECT * FROM users
   WHERE username='<span style="color:var(--red)">${username}</span>'
   AND password='<span style="color:var(--red)">${password}</span>'`;
-
-db.prepare(sql).all();</code></pre>
-    </div>
-    <div class="compare-box safe">
-      <div class="head">&#x2705; Safe Code (server.js)</div>
-      <pre><code><span style="color:var(--text2)">// SAFE: parameterized query</span>
+<span style="color:var(--text2)">// Attacker can escape the string!</span></code></pre>
+      </div>
+      <div class="compare-box safe">
+        <div class="head">&#x2705; Safe — parameterized query</div>
+        <pre><code><span style="color:var(--text2)">// ? = placeholder, input is data only</span>
 const sql = `SELECT * FROM users
   WHERE username=<span style="color:var(--green)">?</span>
   AND password=<span style="color:var(--green)">?</span>`;
 
-db.prepare(sql).all(<span style="color:var(--green)">username, password</span>);</code></pre>
+db.prepare(sql).all(<span style="color:var(--green)">username, password</span>);
+<span style="color:var(--text2)">// Input CANNOT change query structure</span></code></pre>
+      </div>
     </div>
-  </div>
 
-  <!-- ── Burp tip ── -->
-  <h2>&#x1F6E1;&#xFE0F; Intercept This With Burp Suite</h2>
-  <p>Configure Burp Suite's proxy to intercept traffic to <code>localhost:3000</code>. When you click "Log In", you'll see the raw HTTP POST request — and can modify the username/password directly in Burp before forwarding.</p>
-
-  <div class="http-block">
+    <h2 style="margin-top:2rem">&#x1F6E1;&#xFE0F; Intercept with Burp Suite</h2>
+    <p>Point Burp's proxy at <code>localhost:3000</code>. Submit the form with Intercept on to catch this raw POST:</p>
+    <div class="http-block">
 <span class="http-method">POST</span> <span class="http-path">/api/login-vulnerable</span> HTTP/1.1
 <span class="http-header-name">Host:</span> <span class="http-header-val">localhost:3000</span>
 <span class="http-header-name">Content-Type:</span> <span class="http-header-val">application/json</span>
-<span class="http-header-name">Content-Length:</span> <span class="http-header-val">46</span>
 
-<span class="http-body">{"username":"admin","password":"password123"}</span>
+<span class="http-body">{"username":"<span class="http-highlight">administrator'--</span>","password":"anything"}</span>
+    </div>
+    <p>Modify the username to <code>administrator'--</code> and forward. The <code>--</code> comments out the password check entirely.</p>
   </div>
 
-  <p>After intercepting, change the username value to <code class="http-highlight">' or 1=1 -- </code> and forward — the server will bypass authentication.</p>
+</div><!-- end lab1 -->
 
-  <a href="burpsuite.html" class="btn btn-ghost" style="margin-top:0.5rem">Learn how to use Burp Suite →</a>
-</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     LAB 2 — SQL injection in WHERE clause allowing hidden data
+     ════════════════════════════════════════════════════════════════ -->
+<div class="lab-panel" id="lab2">
+
+  <!-- Header -->
+  <div class="lab-header">
+    <div class="lab-header-left">
+      <div class="lab-title">SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</div>
+      <div class="lab-meta">
+        <span class="lab-difficulty apprentice">&#x2B24; APPRENTICE</span>
+        <span class="lab-source">Source: <a href="https://portswigger.net/web-security/sql-injection/lab-retrieve-hidden-data" target="_blank">PortSwigger Web Security Academy ↗</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="lab-layout">
+
+    <!-- LEFT: Description -->
+    <div class="lab-desc">
+      <h3>Lab Description</h3>
+      <p>This lab contains a SQL injection vulnerability in the product category filter. When the user selects a category, the application carries out a SQL query:</p>
+      <pre style="font-size:0.78rem;margin:0.5rem 0"><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products
+<span class="sql-keyword">WHERE</span> category=<span class="sql-string">'[input]'</span>
+<span class="sql-keyword">AND</span> released=1</code></pre>
+      <p>The <code>released=1</code> condition hides unreleased items. Injection can remove this restriction.</p>
+
+      <h3>Task</h3>
+      <div class="task-item" id="lab2-task1">
+        <span class="task-icon">&#x25CB;</span>
+        <span>Make the application display <strong>unreleased</strong> products</span>
+      </div>
+      <div class="task-item" id="lab2-task2">
+        <span class="task-icon">&#x25CB;</span>
+        <span>Retrieve all products across all categories</span>
+      </div>
+
+      <h3>Payloads to try</h3>
+      <div class="payload-group" style="flex-direction:column;gap:4px">
+        <button class="payload-btn" onclick="loadProducts('Books')">&#x1F4DA; Normal: Books</button>
+        <button class="payload-btn inject" onclick="loadProducts(&quot;Gifts'--&quot;)">&#x1F50D; Error probe: Gifts'--</button>
+        <button class="payload-btn inject" onclick="loadProducts(&quot;Gifts' OR 1=1--&quot;)">&#x1F480; OR 1=1 (all rows)</button>
+        <button class="payload-btn inject" onclick="loadProducts(&quot;'+OR+1=1--&quot;)">&#x1F480; URL-encoded version</button>
+      </div>
+
+      <h3 style="margin-top:1.25rem">How it works</h3>
+      <p>Payload: <code>Gifts' OR 1=1--</code></p>
+      <pre style="font-size:0.78rem;margin:0.5rem 0"><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span>
+category=<span class="sql-string">'Gifts'</span> <span class="sql-keyword">OR</span> <span style="color:var(--red)">1=1</span><span class="sql-comment">--' AND released=1</span>
+<span style="color:var(--text2)">  └─ always true! └─ commented out!</span></code></pre>
+
+      <h3 style="margin-top:1.25rem">Safe vs Vulnerable</h3>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button id="lab2-vuln-btn" onclick="setLab2Mode('vuln')" class="btn btn-danger" style="flex:1;padding:6px">Vulnerable</button>
+        <button id="lab2-safe-btn" onclick="setLab2Mode('safe')" class="btn btn-ghost" style="flex:1;padding:6px">Safe</button>
+      </div>
+      <div id="lab2-mode-note" style="font-size:0.78rem;color:var(--text2);margin-top:6px">
+        Currently using: <strong style="color:var(--red)">vulnerable endpoint</strong> (string interpolation)
+      </div>
+    </div>
+
+    <!-- RIGHT: Vulnerable Shop -->
+    <div class="lab-app">
+      <!-- Solved banner -->
+      <div class="lab-solved-banner" id="lab2-solved">
+        <span class="confetti">&#x1F389;</span>
+        Congratulations, you solved the lab! Hidden products revealed via SQL injection.
+      </div>
+
+      <!-- Browser chrome -->
+      <div class="lab-app-bar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="lab-url-bar" id="lab2-url">localhost:3000/shop</div>
+      </div>
+
+      <div class="lab-app-content">
+        <div class="app-shop-header">
+          <h2>&#x1F6CD;&#xFE0F; Security Shop</h2>
+          <div class="shop-cat-btns">
+            <button class="shop-cat-btn active" onclick="loadProducts('')">All</button>
+            <button class="shop-cat-btn" onclick="loadProducts('Books')">Books</button>
+            <button class="shop-cat-btn" onclick="loadProducts('Software')">Software</button>
+            <button class="shop-cat-btn" onclick="loadProducts('Clothing')">Clothing</button>
+            <button class="shop-cat-btn shop-cat-inject" onclick="loadProducts(&quot;Gifts' OR 1=1--&quot;)" title="SQL injection payload">&#x1F480; Inject</button>
+          </div>
+        </div>
+
+        <div id="shop-sql-note" style="background:#fff8f0;border:1px solid #e3b341;border-radius:6px;padding:6px 12px;font-size:0.78rem;color:#9a6700;margin-bottom:0.75rem;display:none"></div>
+        <div class="shop-error" id="shop-error"></div>
+        <div class="product-grid" id="product-grid">
+          <!-- products loaded here -->
+        </div>
+      </div>
+    </div>
+  </div><!-- end lab-layout -->
+
+  <!-- SQL Live Preview for Lab 2 -->
+  <div class="lab-sql-section">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem">
+      <h2 style="margin:0;font-size:1rem;color:var(--yellow)">&#x26A1; Live SQL Query Preview</h2>
+      <span style="font-size:0.8rem;color:var(--text2)">Updates when you click a category</span>
+    </div>
+    <div class="sql-preview">
+      <div class="label">SQL executed on the server (vulnerable version)</div>
+      <div id="lab2-sql-preview" style="font-size:0.9rem;line-height:1.8;font-family:monospace">
+        <span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> released=1
+      </div>
+    </div>
+  </div>
+
+  <!-- Code comparison -->
+  <div class="lab-bottom">
+    <h2>Why It's Vulnerable vs. Safe</h2>
+    <div class="compare">
+      <div class="compare-box vulnerable">
+        <div class="head">&#x1F480; Vulnerable — WHERE clause</div>
+        <pre><code><span style="color:var(--text2)">// GET /api/products?category=Books</span>
+const sql = `SELECT * FROM products
+  WHERE category='<span style="color:var(--red)">${category}</span>'
+  AND released=1`;
+<span style="color:var(--text2)">// Injection removes released=1 check</span></code></pre>
+      </div>
+      <div class="compare-box safe">
+        <div class="head">&#x2705; Safe — parameterized</div>
+        <pre><code><span style="color:var(--text2)">// Input treated as pure data</span>
+const sql = `SELECT * FROM products
+  WHERE category=<span style="color:var(--green)">?</span>
+  AND released=1`;
+
+db.prepare(sql).all(<span style="color:var(--green)">category</span>);
+<span style="color:var(--text2)">// released=1 ALWAYS enforced</span></code></pre>
+      </div>
+    </div>
+
+    <h2 style="margin-top:2rem">&#x1F6E1;&#xFE0F; Intercept with Burp Suite</h2>
+    <p>The product filter sends a GET request. Intercept it and modify the <code>category</code> parameter:</p>
+    <div class="http-block">
+<span class="http-method">GET</span> <span class="http-path">/api/products?category=<span class="http-highlight">Gifts' OR 1=1--</span></span> HTTP/1.1
+<span class="http-header-name">Host:</span> <span class="http-header-val">localhost:3000</span>
+    </div>
+    <p>Change <code>Books</code> to <code>Gifts' OR 1=1--</code> in Burp Repeater — all hidden products appear in the response.</p>
+  </div>
+
+</div><!-- end lab2 -->
 
 <script src="demo.js"></script>
+<script>
+// ── Lab 1 helpers ──────────────────────────────────────────────────
+let lab2Mode = 'vuln';
+
+function setLab1(u, p) {
+  document.getElementById('lab1-username').value = u;
+  document.getElementById('lab1-password').value = p;
+  updateSqlPreview();
+}
+
+function switchLoginTab(tab) {
+  const vulnPane = document.getElementById('l1-vuln-pane');
+  const safePane = document.getElementById('l1-safe-pane');
+  const vulnTab  = document.getElementById('l1-vuln-tab');
+  const safeTab  = document.getElementById('l1-safe-tab');
+  if (tab === 'vuln') {
+    vulnPane.style.display = ''; safePane.style.display = 'none';
+    vulnTab.style.borderBottomColor = '#cf222e'; vulnTab.style.color = '#cf222e'; vulnTab.style.fontWeight = '600';
+    safeTab.style.borderBottomColor = 'transparent'; safeTab.style.color = '#57606a'; safeTab.style.fontWeight = 'normal';
+  } else {
+    vulnPane.style.display = 'none'; safePane.style.display = '';
+    safeTab.style.borderBottomColor = '#0969da'; safeTab.style.color = '#0969da'; safeTab.style.fontWeight = '600';
+    vulnTab.style.borderBottomColor = 'transparent'; vulnTab.style.color = '#57606a'; vulnTab.style.fontWeight = 'normal';
+  }
+}
+
+async function submitLab1(e) {
+  e.preventDefault();
+  const username = document.getElementById('lab1-username').value;
+  const password = document.getElementById('lab1-password').value;
+  const errBox = document.getElementById('lab1-error');
+  const okBox  = document.getElementById('lab1-success');
+  errBox.className = 'app-error'; okBox.className = 'app-success';
+
+  const res  = await fetch('/api/login-vulnerable', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username, password}) });
+  const data = await res.json();
+
+  if (data.success) {
+    okBox.textContent = `✓ Logged in as ${data.users_matched[0]}! (${data.rows_returned} row${data.rows_returned>1?'s':''} returned)`;
+    okBox.className = 'app-success show';
+    // Check if solved via injection (not just normal login)
+    const isInjection = username.includes("'") || username.toLowerCase().includes(' or ') || data.rows_returned > 1;
+    if (isInjection && data.success) {
+      document.getElementById('lab1-solved').classList.add('show');
+      document.getElementById('lab1-solved-user').textContent = data.users_matched[0];
+      markTask('lab1-task1'); markTask('lab1-task2');
+    }
+    document.getElementById('lab1-url').innerHTML = 'localhost:3000/my-account?id=' + data.users_matched[0];
+  } else if (data.error) {
+    errBox.textContent = '⚠ Database error — the single quote broke the SQL syntax!';
+    errBox.className = 'app-error show';
+  } else {
+    errBox.textContent = 'Invalid username or password.';
+    errBox.className = 'app-error show';
+  }
+  updateSqlPreviewFromData(data.sql_executed);
+}
+
+async function submitLab1Safe(e) {
+  e.preventDefault();
+  const username = document.getElementById('lab1-safe-username').value;
+  const password = document.getElementById('lab1-safe-password').value;
+  const errBox   = document.getElementById('lab1-safe-error');
+  const okBox    = document.getElementById('lab1-safe-success');
+  errBox.className='app-error'; okBox.className='app-success';
+
+  const res  = await fetch('/api/login-safe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username,password}) });
+  const data = await res.json();
+  if (data.success) {
+    okBox.textContent = `✓ ${data.message}`;
+    okBox.className = 'app-success show';
+  } else {
+    errBox.textContent = 'Login failed — injection payload treated as literal text, no match found.';
+    errBox.className = 'app-error show';
+  }
+}
+
+// ── Lab 2 helpers ──────────────────────────────────────────────────
+function setLab2Mode(mode) {
+  lab2Mode = mode;
+  const vBtn = document.getElementById('lab2-vuln-btn');
+  const sBtn = document.getElementById('lab2-safe-btn');
+  const note = document.getElementById('lab2-mode-note');
+  if (mode === 'vuln') {
+    vBtn.className = 'btn btn-danger'; sBtn.className = 'btn btn-ghost';
+    note.innerHTML = 'Currently using: <strong style="color:var(--red)">vulnerable endpoint</strong> (string interpolation)';
+  } else {
+    vBtn.className = 'btn btn-ghost'; sBtn.className = 'btn btn-green';
+    note.innerHTML = 'Currently using: <strong style="color:var(--green)">safe endpoint</strong> (parameterized query)';
+  }
+  loadProducts('');
+}
+
+async function loadProducts(category) {
+  // Update URL bar
+  const rawDisplay = category ? `?category=${category}` : '';
+  const urlBar = document.getElementById('lab2-url');
+  const isInject = category.includes("'") || category.toLowerCase().includes(' or ');
+  urlBar.innerHTML = 'localhost:3000/shop' + (category
+    ? `?category=<span class="${isInject ? 'url-inject' : ''}">${escHtml(category)}</span>` : '');
+
+  // Highlight active category button
+  document.querySelectorAll('.shop-cat-btn').forEach(b => {
+    b.classList.remove('active');
+    if ((b.textContent.trim() === 'All' && !category) ||
+        b.textContent.trim() === category) b.classList.add('active');
+  });
+
+  const endpoint = lab2Mode === 'vuln' ? '/api/products' : '/api/products-safe';
+  const url = category ? `${endpoint}?category=${encodeURIComponent(category)}` : endpoint;
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('shop-error').textContent = '⚠ Database error: ' + data.message + '\n\nSQL: ' + data.sql_executed;
+      document.getElementById('shop-error').className = 'shop-error show';
+      document.getElementById('product-grid').innerHTML = '';
+      updateLab2SqlPreview(data.sql_executed || '');
+      return;
+    }
+    document.getElementById('shop-error').className = 'shop-error';
+
+    // Update SQL preview
+    const sqlShown = data.sql_executed || data.sql_template || '';
+    updateLab2SqlPreview(sqlShown, isInject);
+
+    // Show/hide SQL note
+    const noteEl = document.getElementById('shop-sql-note');
+    if (lab2Mode === 'safe' && isInject) {
+      noteEl.textContent = '🛡 Safe mode: injection payload treated as literal text — no extra rows returned.';
+      noteEl.style.display = 'block';
+    } else { noteEl.style.display = 'none'; }
+
+    // Render products
+    const grid = document.getElementById('product-grid');
+    if (!data.products || data.products.length === 0) {
+      grid.innerHTML = '<p style="color:#57606a;font-size:0.88rem">No products found.</p>';
+      return;
+    }
+
+    let hasHidden = false;
+    grid.innerHTML = data.products.map(p => {
+      const isHidden = p.released === 0 || p.released === '0';
+      if (isHidden) hasHidden = true;
+      return `<div class="product-card ${isHidden ? 'hidden-revealed' : ''}">
+        ${isHidden ? '<div class="product-badge">HIDDEN — UNRELEASED</div>' : ''}
+        <div class="product-name">${escHtml(String(p.name))}</div>
+        <div style="font-size:0.75rem;color:#57606a;margin-bottom:6px">${escHtml(String(p.category))}</div>
+        <div style="font-size:0.75rem;color:#57606a;margin-bottom:8px">${escHtml(String(p.description||''))}</div>
+        <div class="product-price">${Number(p.price) === 0 ? 'FREE' : '$' + Number(p.price).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+
+    if (hasHidden && lab2Mode === 'vuln') {
+      document.getElementById('lab2-solved').classList.add('show');
+      markTask('lab2-task1'); markTask('lab2-task2');
+    }
+  } catch(err) {
+    document.getElementById('shop-error').textContent = 'Network error: ' + err.message;
+    document.getElementById('shop-error').className = 'shop-error show';
+  }
+}
+
+function updateLab2SqlPreview(sql, isInject) {
+  const el = document.getElementById('lab2-sql-preview');
+  if (!sql) return;
+  // Simple highlight
+  let html = escHtml(sql)
+    .replace(/\b(SELECT|FROM|WHERE|AND|OR)\b/g, '<span class="sql-keyword">$1</span>')
+    .replace(/'([^']*)'/g, '<span class="sql-string">\'$1\'</span>')
+    .replace(/(--.*)/g, '<span class="sql-comment">$1</span>');
+  el.innerHTML = html;
+}
+
+function updateSqlPreviewFromData(sql) {
+  const el = document.getElementById('sql-preview-text');
+  if (!el || !sql) return;
+  const u = sql.match(/username='(.*?)' AND/)?.[1] || '';
+  const p = sql.match(/password='(.*?)'/)?.[1] || '';
+  el.innerHTML =
+    `<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users ` +
+    `<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'<span class="sql-inject">${escHtml(u)}</span>'</span> ` +
+    `<span class="sql-keyword">AND</span> password=<span class="sql-string">'<span class="sql-inject">${escHtml(p)}</span>'</span>`;
+}
+
+// ── Tab switcher ───────────────────────────────────────────────────
+function switchLab(n) {
+  document.querySelectorAll('.lab-panel').forEach((p,i) => {
+    p.classList.toggle('active', i === n-1);
+  });
+  document.querySelectorAll('.lab-tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === n-1);
+  });
+  if (n === 2) loadProducts('');
+}
+
+// ── Task checker ───────────────────────────────────────────────────
+function markTask(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('done');
+  el.querySelector('.task-icon').textContent = '✓';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── SQL preview (Lab 1) wired to form inputs ───────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const u = document.getElementById('lab1-username');
+  const p = document.getElementById('lab1-password');
+  function renderPreview() {
+    const el = document.getElementById('sql-preview-text');
+    if (!el) return;
+    const uv = escHtml(u.value||'');
+    const pv = escHtml(p.value||'');
+    el.innerHTML =
+      `<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users ` +
+      `<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'<span class="sql-inject">${uv}</span>'</span> ` +
+      `<span class="sql-keyword">AND</span> password=<span class="sql-string">'<span class="sql-inject">${pv}</span>'</span>`;
+  }
+  u && u.addEventListener('input', renderPreview);
+  p && p.addEventListener('input', renderPreview);
+  renderPreview();
+
+  // Active nav
+  document.querySelectorAll('nav a').forEach(a => {
+    if (a.getAttribute('href') === 'login.html') a.classList.add('active');
+  });
+});
+
+function updateSqlPreview() {
+  const u = document.getElementById('lab1-username');
+  const p = document.getElementById('lab1-password');
+  const el = document.getElementById('sql-preview-text');
+  if (!el) return;
+  const uv = escHtml((u&&u.value)||'');
+  const pv = escHtml((p&&p.value)||'');
+  el.innerHTML =
+    `<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users ` +
+    `<span class="sql-keyword">WHERE</span> username=<span class="sql-string">'<span class="sql-inject">${uv}</span>'</span> ` +
+    `<span class="sql-keyword">AND</span> password=<span class="sql-string">'<span class="sql-inject">${pv}</span>'</span>`;
+}
+</script>
 </body>
 </html>
