@@ -137,8 +137,444 @@ db.prepare(sql).all(<span style="color:var(--green)">username, password</span>);
   <p>After intercepting, change the username value to <code class="http-highlight">' or 1=1 -- </code> and forward — the server will bypass authentication.</p>
 
   <a href="burpsuite.html" class="btn btn-ghost" style="margin-top:0.5rem">Learn how to use Burp Suite →</a>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       ACTIVITY: RETRIEVING HIDDEN DATA
+       ══════════════════════════════════════════════════════════════ -->
+  <div style="border-top:1px solid var(--border);margin-top:3rem;padding-top:2.5rem">
+    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+      <span style="background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3);padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:600">&#x1F9EA; ACTIVITY</span>
+      <span style="background:rgba(63,185,80,0.15);color:var(--green);border:1px solid rgba(63,185,80,0.3);padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:600">APPRENTICE</span>
+    </div>
+    <h2 style="margin-top:0.5rem">Retrieving Hidden Data</h2>
+    <p>Imagine a shopping application that displays products in different categories. When the user clicks the <strong>Books</strong> category, their browser requests the URL:</p>
+
+    <div class="http-block" style="margin:0.75rem 0">
+      <span style="color:var(--blue)">https://insecure-website.com/products?category=</span><span style="color:var(--text)">Books</span>
+    </div>
+
+    <p>This causes the application to make a SQL query to retrieve the relevant products from the database:</p>
+    <pre><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> category=<span class="sql-string">'Books'</span> <span class="sql-keyword">AND</span> released=<span style="color:var(--purple)">1</span></code></pre>
+
+    <p>This SQL query asks the database to return:</p>
+    <ul style="margin:0.5rem 0 1rem 1.5rem;color:var(--text2);font-size:0.9rem;line-height:2">
+      <li>all details <code>(*)</code></li>
+      <li>from the <code>products</code> table</li>
+      <li>where the <code>category</code> is <code>Books</code></li>
+      <li>and <code>released</code> is <code>1</code></li>
+    </ul>
+
+    <p>The restriction <code>released=1</code> is being used to hide products that are not released. We could assume for unreleased products, <code>released=0</code>. The application doesn't implement any defenses against SQL injection, so an attacker can construct the following attack:</p>
+
+    <div class="http-block" style="margin:0.75rem 0">
+      <span style="color:var(--blue)">https://insecure-website.com/products?category=</span><span class="sql-inject">Books'--</span>
+    </div>
+
+    <p>This results in the SQL query:</p>
+    <pre><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> category=<span class="sql-string">'Books'</span><span class="sql-comment">-- AND released=1</span>
+<span style="color:var(--text2)">  Crucially, -- is a SQL comment. The rest of the query is removed.</span>
+<span style="color:var(--text2)">  released=1 no longer applies — ALL Books products are displayed.</span></code></pre>
+
+    <p>You can use a similar attack to cause the application to display all products in any category, including categories it doesn't know about:</p>
+
+    <div class="http-block" style="margin:0.75rem 0">
+      <span style="color:var(--blue)">https://insecure-website.com/products?category=</span><span class="sql-inject">Gifts'+OR+1=1--</span>
+    </div>
+
+    <pre><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> category=<span class="sql-string">'Gifts'</span> <span class="sql-keyword">OR</span> <span style="color:var(--red);font-weight:bold">1=1</span><span class="sql-comment">-- AND released=1</span>
+<span style="color:var(--text2)">  The modified query returns ALL items where category='Gifts' OR 1=1.</span>
+<span style="color:var(--text2)">  Since 1=1 is always true, the query returns everything.</span></code></pre>
+
+    <div class="alert alert-warning">
+      <strong>Warning:</strong> Take care when injecting <code>OR 1=1</code>. Even if it appears harmless in a SELECT context, it's common for applications to reuse data from one request in multiple queries. If your condition reaches an <code>UPDATE</code> or <code>DELETE</code> statement, it can result in accidental loss of all data.
+    </div>
+
+    <!-- Live shop demo -->
+    <h2>&#x1F6CD;&#xFE0F; Try It — Live Product Shop</h2>
+    <p>This shop is <strong>vulnerable to WHERE clause injection</strong>. The category filter is passed directly into a SQL query with no sanitization. Use the payload buttons to reveal hidden products.</p>
+
+    <!-- URL bar preview -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-family:monospace;font-size:0.83rem;display:flex;align-items:center;gap:8px">
+      <span style="color:var(--text2);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;flex-shrink:0">URL</span>
+      <span id="shop-url" style="color:var(--text)">localhost:3000/api/products</span>
+    </div>
+
+    <!-- Category buttons -->
+    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;align-items:center">
+      <span style="font-size:0.78rem;color:var(--text2);margin-right:4px">Category filter:</span>
+      <button class="payload-btn" id="cat-all"      onclick="shopLoad('')">All (released only)</button>
+      <button class="payload-btn" id="cat-books"    onclick="shopLoad('Books')">Books</button>
+      <button class="payload-btn" id="cat-software" onclick="shopLoad('Software')">Software</button>
+      <button class="payload-btn" id="cat-clothing" onclick="shopLoad('Clothing')">Clothing</button>
+      <span style="width:1px;height:24px;background:var(--border);margin:0 4px"></span>
+      <button class="payload-btn inject" onclick="shopLoad(&quot;Books'--&quot;)">&#x1F50D; Books'-- (comment out released=1)</button>
+      <button class="payload-btn inject" onclick="shopLoad(&quot;Gifts' OR 1=1--&quot;)">&#x1F480; Gifts' OR 1=1-- (all products)</button>
+    </div>
+
+    <!-- Live SQL preview for shop -->
+    <div class="sql-preview" style="margin-bottom:1rem">
+      <div class="label">&#x26A1; SQL being executed (vulnerable endpoint)</div>
+      <div id="shop-sql-preview" style="font-size:0.88rem;line-height:1.8;font-family:monospace">
+        <span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> released=<span style="color:var(--purple)">1</span>
+      </div>
+    </div>
+
+    <!-- Error box -->
+    <div id="shop-error" style="display:none;background:rgba(248,81,73,0.1);border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:0.83rem;color:var(--red);margin-bottom:1rem"></div>
+
+    <!-- Product grid -->
+    <div id="shop-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:1rem"></div>
+
+    <!-- Toggle safe/vulnerable -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;padding:1rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
+      <span style="font-size:0.85rem;color:var(--text2)">Switch mode:</span>
+      <button id="shop-vuln-btn" class="btn btn-danger" style="padding:6px 16px;font-size:0.83rem" onclick="shopSetMode('vuln')">&#x1F480; Vulnerable endpoint</button>
+      <button id="shop-safe-btn" class="btn btn-ghost" style="padding:6px 16px;font-size:0.83rem" onclick="shopSetMode('safe')">&#x1F6E1;&#xFE0F; Safe endpoint</button>
+      <span id="shop-mode-label" style="font-size:0.82rem;color:var(--text2)">Using: <strong style="color:var(--red)">/api/products</strong> (string interpolation)</span>
+    </div>
+
+    <!-- WHERE clause comparison -->
+    <h3 style="margin-top:2rem">Vulnerable vs. Safe — WHERE Clause</h3>
+    <div class="compare">
+      <div class="compare-box vulnerable">
+        <div class="head">&#x1F480; Vulnerable (server.js)</div>
+        <pre><code><span style="color:var(--text2)">// GET /api/products?category=Books</span>
+const sql = `SELECT * FROM products
+  WHERE category='<span style="color:var(--red)">${category}</span>'
+  AND released=1`;
+
+<span style="color:var(--text2)">// Attacker injects:  Books'--
+// SQL becomes:
+// WHERE category='Books'-- AND released=1
+// released=1 check is GONE!</span></code></pre>
+      </div>
+      <div class="compare-box safe">
+        <div class="head">&#x2705; Safe (parameterized)</div>
+        <pre><code><span style="color:var(--text2)">// Input treated as pure data, never SQL</span>
+const sql = `SELECT * FROM products
+  WHERE category=<span style="color:var(--green)">?</span>
+  AND released=1`;
+
+db.prepare(sql).all(<span style="color:var(--green)">category</span>);
+
+<span style="color:var(--text2)">// Injecting Books'-- just looks for a
+// category literally named "Books'--"
+// No rows match → empty result, no bypass</span></code></pre>
+      </div>
+    </div>
+  </div><!-- end retrieving hidden data -->
+
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PREVENTION — HOW TO FIX SQL INJECTION
+       ══════════════════════════════════════════════════════════════ -->
+  <div style="border-top:1px solid var(--border);margin-top:3rem;padding-top:2.5rem">
+    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+      <span style="background:rgba(63,185,80,0.15);color:var(--green);border:1px solid rgba(63,185,80,0.3);padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:600">&#x1F6E1;&#xFE0F; PREVENTION</span>
+    </div>
+    <h2 style="margin-top:0.5rem">How to Prevent SQL Injection</h2>
+    <p>Most SQL injection vulnerabilities can be prevented by using <strong>parameterized queries</strong> (also called prepared statements) instead of string concatenation. The query structure is defined as a hard-coded template — user input is passed separately and the database never confuses it for SQL syntax.</p>
+
+    <!-- The golden rule -->
+    <div style="background:linear-gradient(135deg,rgba(63,185,80,0.08),rgba(63,185,80,0.03));border:1px solid rgba(63,185,80,0.3);border-radius:10px;padding:1.25rem 1.5rem;margin:1.25rem 0">
+      <div style="font-size:0.78rem;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;margin-bottom:0.5rem">&#x2728; Golden Rule</div>
+      <p style="margin:0;color:var(--text);font-size:0.95rem">The query template must be a <strong>hard-coded constant</strong>. No part of the SQL structure should ever come from user input — no matter how trusted the source appears.</p>
+    </div>
+
+    <!-- Step by step -->
+    <h3>Step-by-step: Fixing a Vulnerable Query</h3>
+
+    <div class="step">
+      <div class="step-num" style="background:var(--red)">1</div>
+      <div class="step-body">
+        <h3>Identify string concatenation</h3>
+        <p>Any place where user input is embedded into a SQL string using <code>+</code>, template literals, <code>%s</code>, or <code>format()</code> is potentially vulnerable.</p>
+        <pre style="margin-top:0.5rem"><code><span style="color:var(--text2)">// ❌ BAD — user input inside the string</span>
+const sql = `SELECT * FROM users WHERE username='<span style="color:var(--red)">${username}</span>'`;</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num" style="background:var(--yellow);color:#000">2</div>
+      <div class="step-body">
+        <h3>Replace with a placeholder</h3>
+        <p>Replace the user value with a <code>?</code> placeholder (or <code>$1</code> in PostgreSQL). The SQL structure is now fixed and cannot be changed by any input.</p>
+        <pre style="margin-top:0.5rem"><code><span style="color:var(--text2)">// ✅ GOOD — structure is fixed, ? is a placeholder</span>
+const sql = `SELECT * FROM users WHERE username=<span style="color:var(--green)">?</span>`;</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num" style="background:var(--green);color:#000">3</div>
+      <div class="step-body">
+        <h3>Pass input as a separate parameter</h3>
+        <p>Provide the user input to the database driver separately. The driver handles escaping and ensures the value is always treated as data — never as SQL syntax.</p>
+        <pre style="margin-top:0.5rem"><code><span style="color:var(--text2)">// ✅ Input passed separately — can never escape the string context</span>
+db.prepare(sql).all(<span style="color:var(--green)">username</span>);</code></pre>
+      </div>
+    </div>
+
+    <!-- Multi-language examples -->
+    <h3 style="margin-top:2rem">Examples Across Languages</h3>
+
+    <!-- Language tab switcher -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;background:var(--bg2);border-radius:8px 8px 0 0;overflow:hidden">
+      <button class="lang-tab active" onclick="switchLang('js')"   id="tab-js"  >Node.js</button>
+      <button class="lang-tab"        onclick="switchLang('py')"   id="tab-py"  >Python</button>
+      <button class="lang-tab"        onclick="switchLang('java')" id="tab-java">Java</button>
+      <button class="lang-tab"        onclick="switchLang('php')"  id="tab-php" >PHP</button>
+    </div>
+
+    <div id="lang-js" class="lang-pane" style="display:block">
+      <div class="compare">
+        <div class="compare-box vulnerable">
+          <div class="head">&#x1F480; Vulnerable — Node.js</div>
+          <pre><code><span style="color:var(--text2)">// String interpolation = injectable</span>
+const sql = `SELECT * FROM users
+  WHERE username='<span style="color:var(--red)">${username}</span>'
+  AND password='<span style="color:var(--red)">${password}</span>'`;
+
+db.prepare(sql).all();</code></pre>
+        </div>
+        <div class="compare-box safe">
+          <div class="head">&#x2705; Safe — Node.js (better-sqlite3 / sql.js)</div>
+          <pre><code><span style="color:var(--text2)">// ? placeholders — input is data only</span>
+const sql = `SELECT * FROM users
+  WHERE username=<span style="color:var(--green)">?</span>
+  AND password=<span style="color:var(--green)">?</span>`;
+
+db.prepare(sql).all(<span style="color:var(--green)">username, password</span>);</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-py" class="lang-pane" style="display:none">
+      <div class="compare">
+        <div class="compare-box vulnerable">
+          <div class="head">&#x1F480; Vulnerable — Python</div>
+          <pre><code><span style="color:var(--text2)"># f-string inside SQL = injectable</span>
+cursor.execute(
+  f"SELECT * FROM users WHERE username='<span style="color:var(--red)">{username}</span>'"
+)</code></pre>
+        </div>
+        <div class="compare-box safe">
+          <div class="head">&#x2705; Safe — Python (sqlite3 / psycopg2)</div>
+          <pre><code><span style="color:var(--text2)"># %s placeholder + tuple of params</span>
+cursor.execute(
+  "SELECT * FROM users WHERE username=<span style="color:var(--green)">%s</span> AND password=<span style="color:var(--green)">%s</span>",
+  (<span style="color:var(--green)">username, password</span>)
+)</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-java" class="lang-pane" style="display:none">
+      <div class="compare">
+        <div class="compare-box vulnerable">
+          <div class="head">&#x1F480; Vulnerable — Java (JDBC)</div>
+          <pre><code><span style="color:var(--text2)">// Concatenation = injectable</span>
+String sql = "SELECT * FROM users WHERE "
+  + "username='" + <span style="color:var(--red)">username</span> + "' AND "
+  + "password='" + <span style="color:var(--red)">password</span> + "'";
+Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery(sql);</code></pre>
+        </div>
+        <div class="compare-box safe">
+          <div class="head">&#x2705; Safe — Java (PreparedStatement)</div>
+          <pre><code><span style="color:var(--text2)">// ? placeholders — structure is fixed</span>
+PreparedStatement stmt = conn.prepareStatement(
+  "SELECT * FROM users WHERE username=<span style="color:var(--green)">?</span> AND password=<span style="color:var(--green)">?</span>"
+);
+stmt.setString(1, <span style="color:var(--green)">username</span>);
+stmt.setString(2, <span style="color:var(--green)">password</span>);
+ResultSet rs = stmt.executeQuery();</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-php" class="lang-pane" style="display:none">
+      <div class="compare">
+        <div class="compare-box vulnerable">
+          <div class="head">&#x1F480; Vulnerable — PHP</div>
+          <pre><code><span style="color:var(--text2)">// Variable in query string = injectable</span>
+$sql = "SELECT * FROM users WHERE
+  username='<span style="color:var(--red)">$username</span>' AND
+  password='<span style="color:var(--red)">$password</span>'";
+$result = mysqli_query($conn, $sql);</code></pre>
+        </div>
+        <div class="compare-box safe">
+          <div class="head">&#x2705; Safe — PHP (PDO)</div>
+          <pre><code><span style="color:var(--text2)">// Named placeholders</span>
+$stmt = $pdo->prepare(
+  "SELECT * FROM users WHERE username=<span style="color:var(--green)">:user</span> AND password=<span style="color:var(--green)">:pass</span>"
+);
+$stmt->execute([
+  '<span style="color:var(--green)">:user</span>' => <span style="color:var(--green)">$username</span>,
+  '<span style="color:var(--green)">:pass</span>' => <span style="color:var(--green)">$password</span>
+]);</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Limitations -->
+    <h3 style="margin-top:2rem">When Parameterized Queries Are Not Enough</h3>
+    <p>Parameterized queries work for <strong>values</strong> (strings, numbers). They cannot be used for structural parts of a query like table names, column names, or <code>ORDER BY</code> values. For these, use an <strong>allowlist</strong>:</p>
+
+    <div class="compare">
+      <div class="compare-box vulnerable">
+        <div class="head">&#x1F480; Still vulnerable</div>
+        <pre><code><span style="color:var(--text2)">// Column names can't be parameterized</span>
+const col = req.query.sort; <span style="color:var(--text2)">// e.g. "username"</span>
+const sql = `SELECT * FROM users ORDER BY <span style="color:var(--red)">${col}</span>`;
+<span style="color:var(--text2)">// Attacker sends: sort=(SELECT password FROM users LIMIT 1)</span></code></pre>
+      </div>
+      <div class="compare-box safe">
+        <div class="head">&#x2705; Safe — allowlist</div>
+        <pre><code><span style="color:var(--text2)">// Validate against known-safe values only</span>
+const ALLOWED = ['username', 'email', 'created_at'];
+const col = ALLOWED.includes(req.query.sort)
+  ? req.query.sort
+  : 'username'; <span style="color:var(--text2)">// default fallback</span>
+const sql = `SELECT * FROM users ORDER BY ${col}`;</code></pre>
+      </div>
+    </div>
+
+    <div class="alert alert-info" style="margin-top:1.25rem">
+      <strong>Summary of defences:</strong>
+      <ul style="margin-top:0.5rem;margin-left:1.25rem;line-height:2">
+        <li><strong>Parameterized queries</strong> — primary fix for all value inputs</li>
+        <li><strong>Allowlist validation</strong> — for table/column names and ORDER BY</li>
+        <li><strong>Least privilege</strong> — database user should only have SELECT where needed</li>
+        <li><strong>WAF (Web Application Firewall)</strong> — useful as a secondary layer, not a replacement</li>
+      </ul>
+    </div>
+  </div><!-- end prevention -->
+
 </div>
 
+<style>
+/* Language tab buttons */
+.lang-tab {
+  padding: 9px 18px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text2);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+.lang-tab:hover { color: var(--text); }
+.lang-tab.active { color: var(--green); border-bottom-color: var(--green); }
+.lang-pane .compare { margin-top: 0; border-radius: 0 8px 8px 8px; }
+</style>
+
 <script src="demo.js"></script>
+<script>
+// ── Language tab switcher ──────────────────────────────────────────
+function switchLang(lang) {
+  ['js','py','java','php'].forEach(l => {
+    document.getElementById('lang-' + l).style.display = l === lang ? 'block' : 'none';
+    const tab = document.getElementById('tab-' + l);
+    tab.classList.toggle('active', l === lang);
+  });
+}
+
+// ── Shop demo ─────────────────────────────────────────────────────
+let shopMode = 'vuln';
+let currentCat = '';
+
+function shopSetMode(mode) {
+  shopMode = mode;
+  const vBtn = document.getElementById('shop-vuln-btn');
+  const sBtn = document.getElementById('shop-safe-btn');
+  const label = document.getElementById('shop-mode-label');
+  if (mode === 'vuln') {
+    vBtn.className = 'btn btn-danger'; sBtn.className = 'btn btn-ghost';
+    label.innerHTML = 'Using: <strong style="color:var(--red)">/api/products</strong> (string interpolation)';
+  } else {
+    vBtn.className = 'btn btn-ghost'; sBtn.className = 'btn btn-green';
+    label.innerHTML = 'Using: <strong style="color:var(--green)">/api/products-safe</strong> (parameterized query)';
+  }
+  shopLoad(currentCat);
+}
+
+async function shopLoad(category) {
+  currentCat = category;
+
+  // Update URL bar
+  const urlEl = document.getElementById('shop-url');
+  const isInject = category.includes("'") || category.toLowerCase().includes(' or ');
+  urlEl.innerHTML = 'localhost:3000/api/products' +
+    (category ? '?category=<span style="color:' + (isInject ? 'var(--red)' : 'var(--blue)') + '">' + escHtml(category) + '</span>' : '');
+
+  // Highlight active cat button
+  ['all','books','software','clothing'].forEach(id => {
+    const btn = document.getElementById('cat-' + id);
+    if (btn) btn.style.borderColor = '';
+  });
+  const activeMap = {'':'cat-all','Books':'cat-books','Software':'cat-software','Clothing':'cat-clothing'};
+  const activeBtn = document.getElementById(activeMap[category]);
+  if (activeBtn) activeBtn.style.borderColor = 'var(--blue)';
+
+  const endpoint = shopMode === 'safe' ? '/api/products-safe' : '/api/products';
+  const url = category ? `${endpoint}?category=${encodeURIComponent(category)}` : endpoint;
+
+  const errEl  = document.getElementById('shop-error');
+  const gridEl = document.getElementById('shop-grid');
+  const sqlEl  = document.getElementById('shop-sql-preview');
+  errEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    // SQL preview
+    if (data.sql_executed || data.sql_template) {
+      const rawSql = data.sql_executed || data.sql_template;
+      sqlEl.innerHTML = escHtml(rawSql)
+        .replace(/\b(SELECT|FROM|WHERE|AND|OR|released)\b/g, '<span class="sql-keyword">$1</span>')
+        .replace(/'([^']*)'/g, "<span class='sql-string'>'$1'</span>")
+        .replace(/(--[^\n]*)/g, '<span class="sql-comment">$1</span>')
+        .replace(/\b(1)\b/g, '<span style="color:var(--purple)">$1</span>');
+    }
+
+    if (data.error) {
+      errEl.textContent = '⚠ Database error: ' + data.message + '\n\nSQL attempted: ' + data.sql_executed;
+      errEl.style.display = 'block';
+      gridEl.innerHTML = '';
+      return;
+    }
+
+    if (!data.products || data.products.length === 0) {
+      gridEl.innerHTML = '<p style="color:var(--text2);font-size:0.88rem;grid-column:1/-1">No products found.</p>';
+      return;
+    }
+
+    gridEl.innerHTML = data.products.map(p => {
+      const isHidden = String(p.released) === '0';
+      return `<div style="background:var(--bg2);border:1px solid ${isHidden ? 'var(--red)' : 'var(--border)'};border-radius:10px;padding:1rem;transition:border-color 0.2s;${isHidden ? 'background:rgba(248,81,73,0.06)' : ''}">
+        ${isHidden ? '<div style="display:inline-block;background:rgba(248,81,73,0.15);color:var(--red);border:1px solid rgba(248,81,73,0.3);font-size:0.68rem;padding:1px 8px;border-radius:4px;font-weight:700;margin-bottom:6px">HIDDEN — UNRELEASED</div><br>' : ''}
+        <div style="font-weight:600;font-size:0.9rem;color:${isHidden ? 'var(--red)' : 'var(--text)'};margin-bottom:3px">${escHtml(String(p.name))}</div>
+        <div style="font-size:0.75rem;color:var(--text2);margin-bottom:5px">${escHtml(String(p.category))}</div>
+        <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px">${escHtml(String(p.description || ''))}</div>
+        <div style="font-weight:700;color:var(--green);font-size:0.9rem">${Number(p.price) === 0 ? 'FREE' : '$' + Number(p.price).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+
+  } catch(err) {
+    errEl.textContent = 'Network error: ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Load all products on page load
+document.addEventListener('DOMContentLoaded', () => { shopLoad(''); });
+</script>
 </body>
 </html>
