@@ -145,6 +145,52 @@ sqli-demo/
 
 ---
 
+## Hosting Online (Free)
+
+> ⚠️ **Security notice:** This app is intentionally vulnerable. The in-memory database resets on every restart so no real data is at risk — but be aware the SQLi endpoints are real attack surfaces. Don't connect it to any real database and don't use real credentials anywhere.
+
+### Recommended: Render (free, HTTPS, auto-deploy from GitHub)
+
+Render is the easiest free host for Node.js. It gives you HTTPS automatically and redeploys every time you push to GitHub.
+
+**One-time setup (5 minutes):**
+
+1. Go to [render.com](https://render.com) and sign up with your GitHub account
+2. Click **"New +"** → **"Web Service"**
+3. Connect your GitHub repo: `sAeNrDER/sqli-demo`
+4. Fill in the settings:
+
+| Field | Value |
+|-------|-------|
+| **Name** | `sqli-demo` (or anything) |
+| **Runtime** | `Node` |
+| **Build command** | `npm install` |
+| **Start command** | `node server.js` |
+| **Instance type** | `Free` |
+
+5. Click **"Deploy Web Service"**
+
+Render will build and deploy. In ~2 minutes you'll get a live URL like:
+```
+https://sqli-demo.onrender.com
+```
+
+Every `git push` to `main` triggers an automatic redeploy.
+
+> **Free tier note:** The free instance spins down after 15 minutes of inactivity. The first request after idle takes ~30 seconds to wake up. For a class demo, open the URL a minute before you present.
+
+---
+
+### Other Free Options
+
+| Platform | Free tier | Notes |
+|----------|-----------|-------|
+| [Railway](https://railway.app) | $5 credit/month | Faster cold start than Render, GitHub deploy |
+| [Fly.io](https://fly.io) | 3 shared VMs free | Needs `flyctl` CLI setup, more complex |
+| [Glitch](https://glitch.com) | Always-on (limited) | Remix directly in browser, no CLI needed |
+
+---
+
 ## Stack
 
 - **Node.js + Express** — web server
