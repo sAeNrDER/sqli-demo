@@ -6,6 +6,32 @@ An interactive educational website for **FIT2173/FIT3173 Web Security Lab 7**. C
 
 ---
 
+## Prerequisites — Environment Setup
+
+Before running the project, make sure these are installed. Run the check commands first — if any fail, follow the install link.
+
+| Tool | Required | Check | Install |
+|------|----------|-------|---------|
+| **Node.js** | v18+ | `node -v` | [nodejs.org](https://nodejs.org) |
+| **npm** | v8+ (bundled with Node) | `npm -v` | Comes with Node.js |
+| **Git** | any | `git --version` | [git-scm.com](https://git-scm.com) |
+
+**One-liner to check all three at once (PowerShell / CMD):**
+```powershell
+node -v && npm -v && git --version
+```
+
+Expected output (versions may differ):
+```
+v20.11.0
+10.2.4
+git version 2.43.0.windows.1
+```
+
+> If `node` is not found, download the **LTS** installer from [nodejs.org](https://nodejs.org) — npm is included automatically. No Python or compiler needed; this project uses `sql.js` (pure JavaScript SQLite).
+
+---
+
 ## Quick Start (Windows — Recommended)
 
 **Prerequisite:** [Node.js v18+](https://nodejs.org) must be installed.
